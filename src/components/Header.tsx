@@ -1,10 +1,7 @@
-
 import React from 'react';
 import { TrendingUp, Calculator } from 'lucide-react';
-
 export const Header = () => {
-  return (
-    <header className="bg-white shadow-sm border-b">
+  return <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -12,7 +9,7 @@ export const Header = () => {
               <Calculator className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">InvestLT</h1>
+              <h1 className="text-xl font-bold text-gray-900">r/6nuliai</h1>
               <p className="text-sm text-gray-600">Investavimo skaičiuoklė</p>
             </div>
           </div>
@@ -23,6 +20,5 @@ export const Header = () => {
           </div>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
