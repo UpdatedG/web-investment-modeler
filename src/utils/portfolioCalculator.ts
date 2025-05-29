@@ -7,8 +7,8 @@ export interface YearlyCalculation {
     percentage: number;
     annualReturn: number;
     value: number;
-    crashLoss?: number;
-    correctionLoss?: number;
+    crashDrawdown?: number;
+    correctionDrawdown?: number;
     isRecovering?: boolean;
     isCorrection?: boolean;
     recoveryProgress?: number;
@@ -340,179 +340,74 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
       
       let newTotalValue = 0;
       
-      if (isCrashYear) {
-        // Crash year - crash happens on Jan 2nd, recovery starts immediately
-        const preContributionValue = currentValue;
-        recoveryState.targetValue = preContributionValue + annualContribution;
-        recoveryState.totalRecoveryTime = 1 + Math.random() * 0.7; // 1-1.7 years
-        recoveryState.recoveryTimeRemaining = recoveryState.totalRecoveryTime;
-        recoveryState.isRecovering = true;
+      // ALWAYS calculate normal returns for actual portfolio value (ignoring crashes/corrections)
+      portfolio.instruments.forEach(instrument => {
+        const allocation = currentValue * (instrument.percentage / 100);
+        const returnRange = (instrument as any).returnRange || [5, 10];
+        const normalReturn = generateRandomReturn(returnRange);
+        const instrumentValue = allocation * (1 + normalReturn / 100) + (annualContribution * (instrument.percentage / 100));
         
-        // Calculate if recovery completes this year
-        if (recoveryState.totalRecoveryTime <= 1) {
-          // Recovery completes within this year
-          const recoveryPortion = recoveryState.totalRecoveryTime;
-          const normalPortion = 1 - recoveryPortion;
+        // For logging purposes, calculate drawdowns but don't apply them to actual value
+        let crashDrawdown: number | undefined;
+        let correctionDrawdown: number | undefined;
+        let isRecovering = false;
+        let isCorrection = false;
+        let recoveryProgress: number | undefined;
+        let correctionRecoveryProgress: number | undefined;
+        
+        if (isCrashYear) {
+          crashDrawdown = calculateCrashLoss(instrument.name);
+          recoveryState.targetValue = currentValue + annualContribution;
+          recoveryState.totalRecoveryTime = 1 + Math.random() * 0.7; // 1-1.7 years
+          recoveryState.recoveryTimeRemaining = recoveryState.totalRecoveryTime;
+          recoveryState.isRecovering = true;
           
-          portfolio.instruments.forEach(instrument => {
-            const allocation = preContributionValue * (instrument.percentage / 100);
-            const crashLoss = calculateCrashLoss(instrument.name);
-            const returnRange = (instrument as any).returnRange || [5, 10];
-            const normalReturn = generateRandomReturn(returnRange);
-            
-            // Crash loss, then recovery, then normal returns for remainder
-            const postCrashValue = allocation * (1 - crashLoss / 100);
-            const recoveredValue = recoveryState.targetValue * (instrument.percentage / 100);
-            const normalGrowth = recoveredValue * (normalReturn / 100) * normalPortion;
-            const instrumentValue = recoveredValue + normalGrowth;
-            
-            yearCalculation.instruments.push({
-              name: instrument.name,
-              percentage: instrument.percentage,
-              annualReturn: normalReturn * normalPortion - crashLoss * recoveryPortion,
-              value: instrumentValue,
-              crashLoss,
-              isRecovering: true,
-              recoveryProgress: 1
-            });
-            
-            newTotalValue += instrumentValue;
-          });
-          
-          recoveryState.isRecovering = false;
-          
-        } else {
-          // Recovery continues beyond this year
-          portfolio.instruments.forEach(instrument => {
-            const allocation = preContributionValue * (instrument.percentage / 100);
-            const crashLoss = calculateCrashLoss(instrument.name);
-            
-            // Just the crash loss this year, partial recovery
-            const postCrashValue = allocation * (1 - crashLoss / 100);
-            const recoveryProgress = 1 / recoveryState.totalRecoveryTime;
-            const targetAllocation = recoveryState.targetValue * (instrument.percentage / 100);
-            const instrumentValue = postCrashValue + (targetAllocation - postCrashValue) * recoveryProgress;
-            
-            yearCalculation.instruments.push({
-              name: instrument.name,
-              percentage: instrument.percentage,
-              annualReturn: -crashLoss + ((targetAllocation / allocation - 1) * 100) * recoveryProgress,
-              value: instrumentValue,
-              crashLoss,
-              isRecovering: true,
-              recoveryProgress: recoveryProgress
-            });
-            
-            newTotalValue += instrumentValue;
-          });
-          
-          recoveryState.recoveryTimeRemaining -= 1;
+          if (recoveryState.totalRecoveryTime <= 1) {
+            // Recovery completes within this year
+            isRecovering = true;
+            recoveryProgress = 1;
+            recoveryState.isRecovering = false;
+          } else {
+            // Recovery continues beyond this year
+            isRecovering = true;
+            recoveryProgress = 1 / recoveryState.totalRecoveryTime;
+            recoveryState.recoveryTimeRemaining -= 1;
+          }
+        } else if (recoveryState.isRecovering) {
+          // Continuing recovery from previous crash
+          if (recoveryState.recoveryTimeRemaining <= 1) {
+            // Recovery completes this year
+            isRecovering = true;
+            recoveryProgress = 1;
+            recoveryState.isRecovering = false;
+          } else {
+            // Still recovering
+            isRecovering = true;
+            recoveryProgress = (recoveryState.totalRecoveryTime - recoveryState.recoveryTimeRemaining + 1) / recoveryState.totalRecoveryTime;
+            recoveryState.recoveryTimeRemaining -= 1;
+          }
+        } else if (isCorrectionYear) {
+          // Correction year - for logging only
+          correctionDrawdown = calculateCorrectionLoss(instrument.name);
+          isCorrection = true;
+          correctionRecoveryProgress = 1; // Assume full recovery within 6-10 months
         }
         
-      } else if (recoveryState.isRecovering) {
-        // Continuing recovery from previous crash
-        if (recoveryState.recoveryTimeRemaining <= 1) {
-          // Recovery completes this year
-          const recoveryPortion = recoveryState.recoveryTimeRemaining;
-          const normalPortion = 1 - recoveryPortion;
-          
-          portfolio.instruments.forEach(instrument => {
-            const returnRange = (instrument as any).returnRange || [5, 10];
-            const normalReturn = generateRandomReturn(returnRange);
-            
-            // Complete recovery, then normal returns for remainder
-            const recoveredValue = recoveryState.targetValue * (instrument.percentage / 100);
-            const normalGrowth = recoveredValue * (normalReturn / 100) * normalPortion;
-            const instrumentValue = recoveredValue + normalGrowth + (annualContribution * (instrument.percentage / 100));
-            
-            yearCalculation.instruments.push({
-              name: instrument.name,
-              percentage: instrument.percentage,
-              annualReturn: normalReturn * normalPortion,
-              value: instrumentValue,
-              isRecovering: true,
-              recoveryProgress: 1
-            });
-            
-            newTotalValue += instrumentValue;
-          });
-          
-          recoveryState.isRecovering = false;
-          
-        } else {
-          // Still recovering
-          const progressThisYear = 1 / recoveryState.totalRecoveryTime;
-          
-          portfolio.instruments.forEach(instrument => {
-            const currentAllocation = currentValue * (instrument.percentage / 100);
-            const targetAllocation = (recoveryState.targetValue + annualContribution) * (instrument.percentage / 100);
-            const recoveryStep = (targetAllocation - currentAllocation) * progressThisYear;
-            const instrumentValue = currentAllocation + recoveryStep;
-            
-            yearCalculation.instruments.push({
-              name: instrument.name,
-              percentage: instrument.percentage,
-              annualReturn: (recoveryStep / currentAllocation) * 100,
-              value: instrumentValue,
-              isRecovering: true,
-              recoveryProgress: (recoveryState.totalRecoveryTime - recoveryState.recoveryTimeRemaining + 1) / recoveryState.totalRecoveryTime
-            });
-            
-            newTotalValue += instrumentValue;
-          });
-          
-          recoveryState.recoveryTimeRemaining -= 1;
-        }
-        
-      } else if (isCorrectionYear) {
-        // Correction year - correction happens, then recovers within 6-10 months
-        const preContributionValue = currentValue;
-        const correctionRecoveryTime = (6 + Math.random() * 4) / 12; // 6-10 months as fraction of year
-        const normalPortion = 1 - correctionRecoveryTime;
-        
-        portfolio.instruments.forEach(instrument => {
-          const allocation = preContributionValue * (instrument.percentage / 100);
-          const correctionLoss = calculateCorrectionLoss(instrument.name);
-          const returnRange = (instrument as any).returnRange || [5, 10];
-          const normalReturn = generateRandomReturn(returnRange);
-          
-          // Correction loss, then recovery, then normal returns for remainder of year
-          const postCorrectionValue = allocation * (1 - correctionLoss / 100);
-          const recoveredValue = allocation; // Recover to pre-correction level
-          const normalGrowth = recoveredValue * (normalReturn / 100) * normalPortion;
-          const instrumentValue = recoveredValue + normalGrowth + (annualContribution * (instrument.percentage / 100));
-          
-          yearCalculation.instruments.push({
-            name: instrument.name,
-            percentage: instrument.percentage,
-            annualReturn: normalReturn * normalPortion - correctionLoss * correctionRecoveryTime,
-            value: instrumentValue,
-            correctionLoss,
-            isCorrection: true,
-            correctionRecoveryProgress: 1
-          });
-          
-          newTotalValue += instrumentValue;
+        yearCalculation.instruments.push({
+          name: instrument.name,
+          percentage: instrument.percentage,
+          annualReturn: normalReturn,
+          value: instrumentValue,
+          crashDrawdown,
+          correctionDrawdown,
+          isRecovering,
+          isCorrection,
+          recoveryProgress,
+          correctionRecoveryProgress
         });
         
-      } else {
-        // Normal year - calculate standard returns
-        portfolio.instruments.forEach(instrument => {
-          const allocation = currentValue * (instrument.percentage / 100);
-          const returnRange = (instrument as any).returnRange || [5, 10];
-          const annualReturn = generateRandomReturn(returnRange);
-          const instrumentValue = allocation * (1 + annualReturn / 100) + (annualContribution * (instrument.percentage / 100));
-          
-          yearCalculation.instruments.push({
-            name: instrument.name,
-            percentage: instrument.percentage,
-            annualReturn: annualReturn,
-            value: instrumentValue
-          });
-          
-          newTotalValue += instrumentValue;
-        });
-      }
+        newTotalValue += instrumentValue;
+      });
       
       yearCalculation.totalValue = newTotalValue;
       currentValue = newTotalValue;

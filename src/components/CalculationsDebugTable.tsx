@@ -28,8 +28,8 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
                 <TableHead>Instrumentas</TableHead>
                 <TableHead>Alokacija %</TableHead>
                 <TableHead>Metinė grąža %</TableHead>
-                <TableHead>Crash nuostolis %</TableHead>
-                <TableHead>Correction nuostolis %</TableHead>
+                <TableHead>Crash drawdown %</TableHead>
+                <TableHead>Correction drawdown %</TableHead>
                 <TableHead>Atsigavimo progresija</TableHead>
                 <TableHead>Vertė</TableHead>
                 <TableHead>Bendra vertė</TableHead>
@@ -86,10 +86,10 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
                       {yearCalc.year === 0 ? '-' : formatPercentage(instrument.annualReturn)}
                     </TableCell>
                     <TableCell className="text-red-600">
-                      {instrument.crashLoss ? formatPercentage(instrument.crashLoss) : '-'}
+                      {instrument.crashDrawdown ? formatPercentage(instrument.crashDrawdown) : '-'}
                     </TableCell>
                     <TableCell className="text-orange-600">
-                      {instrument.correctionLoss ? formatPercentage(instrument.correctionLoss) : '-'}
+                      {instrument.correctionDrawdown ? formatPercentage(instrument.correctionDrawdown) : '-'}
                     </TableCell>
                     <TableCell>
                       {instrument.isRecovering && instrument.recoveryProgress !== undefined ? (
@@ -170,20 +170,20 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
             <p><strong>Crash scenarijus:</strong></p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li><strong>Tikimybė:</strong> 18.7% kiekvienais metais</li>
-              <li><strong>Nuostoliai:</strong> 15-45% priklausomai nuo aktyvų volatilumu</li>
+              <li><strong>Drawdown:</strong> 15-45% priklausomai nuo aktyvų volatilumu (tik vizualizacijai)</li>
               <li><strong>Atsigavimas:</strong> 1-1.7 metų (atsitiktinai parenkama)</li>
-              <li><strong>Skaičiavimas:</strong> Atsigavimo metu grįžtama prie ankstesnių metų lygio, likusi metų dalis skaičiuojama normaliai</li>
+              <li><strong>Skaičiavimas:</strong> Portfolio vertė skaičiuojama normaliai, drawdown rodomas tik grafike ir loguose</li>
             </ul>
             
             <p><strong>Correction scenarijus:</strong></p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li><strong>Tikimybė:</strong> 50% kiekvienais metais (išskyrus crash/recovery metus)</li>
-              <li><strong>Nuostoliai:</strong> 5-30% priklausomai nuo aktyvų volatilumu</li>
+              <li><strong>Drawdown:</strong> 5-30% priklausomai nuo aktyvų volatilumu (tik vizualizacijai)</li>
               <li><strong>Atsigavimas:</strong> 6-10 mėnesių (atsitiktinai parenkama)</li>
-              <li><strong>Skaičiavimas:</strong> Correction atsigavimas ir normalūs grąžos skaičiavimai proporcingai padalinami pagal laiką</li>
+              <li><strong>Skaičiavimas:</strong> Portfolio vertė skaičiuojama normaliai, drawdown rodomas tik grafike ir loguose</li>
             </ul>
             
-            <p className="mt-4"><strong>Aktyvų crash nuostoliai:</strong></p>
+            <p className="mt-4"><strong>Aktyvų crash drawdown:</strong></p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>Mažo volatilumu (Auksas, ETF): 15-25%</li>
               <li>Vidutinio volatilumu (Augimo akcijos): 20-30%</li>
@@ -192,7 +192,7 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
               <li>Ekstremalu volatilumu (Kripto, Moonshot): 40-45%</li>
             </ul>
             
-            <p className="mt-4"><strong>Aktyvų correction nuostoliai:</strong></p>
+            <p className="mt-4"><strong>Aktyvų correction drawdown:</strong></p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>Mažo volatilumu (Auksas, ETF): 5-12%</li>
               <li>Vidutinio volatilumu (Augimo akcijos): 10-15%</li>
