@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { InvestmentFormEn } from '@/components/InvestmentForm-en';
-import { PortfolioResults } from '@/components/PortfolioResults';
+import { PortfolioResultsEn } from '@/components/PortfolioResults-en';
 import { HeaderEn } from '@/components/Header-en';
 import { DisclaimerEn } from '@/components/Disclaimer-en';
 
@@ -60,7 +60,7 @@ const IndexEn: React.FC<IndexEnProps> = ({ onLanguageChange }) => {
         {!showResults ? (
           <InvestmentFormEn onSubmit={handleFormSubmit} />
         ) : (
-          <PortfolioResults inputs={inputs!} onReset={handleReset} />
+          <PortfolioResultsEn inputs={inputs!} onReset={handleReset} />
         )}
         
         <DisclaimerEn />
