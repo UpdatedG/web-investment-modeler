@@ -12,31 +12,31 @@ export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocatio
     },
     growthStock: {
       name: 'Augimo akcijos',
-      description: 'Didelio potencialo įmonių akcijos su stipriu augimu'
+      description: 'Didelio potencialo įmonių akcijos (pvz. Apple, Microsoft, Tesla, Google)'
     },
     cryptoETF: {
       name: 'Kriptovaliutų ETF',
-      description: 'Diversifikuotas kriptovaliutų fondas'
+      description: 'Diversifikuotas kriptovaliutų fondas (pvz. BITO, ETHE)'
     },
     crypto: {
       name: 'Kriptovaliutos',
-      description: 'Tiesioginės kriptovaliutų investicijos (Bitcoin, Ethereum)'
+      description: 'Tiesioginės kriptovaliutų investicijos (Bitcoin, Ethereum, Solana)'
     },
     gold: {
       name: 'Auksas',
-      description: 'Fizinis auksas arba aukso ETF kaip infliacijos apsauga'
+      description: 'Fizinis auksas arba aukso ETF (pvz. GLD, IAU) kaip infliacijos apsauga'
     },
     options: {
       name: 'Opcionai',
-      description: 'Akcijų opcionai didelio potencialo pelno gavimui'
+      description: 'Akcijų opcionai didelio potencialo pelno gavimui (SPY, QQQ opcionai)'
     },
     leveraged: {
       name: 'Leveraged produktai',
-      description: 'Finanisniais svertais pagrįsti investavimo produktai'
+      description: 'Finanisniais svertais pagrįsti investavimo produktai (pvz. TQQQ, UPRO)'
     },
     moonshot: {
       name: 'Moonshot aktyvai',
-      description: 'Itin spekuliatyvūs aktyvai su ekstremalia rizika ir galimybe'
+      description: 'Itin spekuliatyvūs aktyvai (penny stocks, meme coins, SPAC)'
     }
   };
 
@@ -105,19 +105,19 @@ export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocatio
 function getETFName(sector: string, geography: string): string {
   if (sector !== 'general') {
     const sectorNames: Record<string, string> = {
-      technology: 'Technologijų ETF',
-      healthcare: 'Sveikatos sektorius ETF',
-      energy: 'Energetikos ETF',
-      automotive: 'Automobilių ETF',
-      realestate: 'Nekilnojamojo turto ETF'
+      technology: 'Technologijų ETF (pvz. VGT, XLK)',
+      healthcare: 'Sveikatos sektorius ETF (pvz. VHT, XLV)',
+      energy: 'Energetikos ETF (pvz. VDE, XLE)',
+      automotive: 'Automobilių ETF (pvz. CARZ, DRIV)',
+      realestate: 'Nekilnojamojo turto ETF (pvz. VNQ, REIT)'
     };
     return sectorNames[sector] || 'VWCE ETF';
   }
 
   const geoNames: Record<string, string> = {
     global: 'VWCE ETF (Vanguard FTSE All-World)',
-    europe: 'Europos rinkų ETF',
-    emerging: 'Besivystančių rinkų ETF'
+    europe: 'Europos rinkų ETF (pvz. VGK, EZU)',
+    emerging: 'Besivystančių rinkų ETF (pvz. VWO, EEM)'
   };
 
   return geoNames[geography] || 'VWCE ETF';
@@ -126,19 +126,19 @@ function getETFName(sector: string, geography: string): string {
 function getETFDescription(sector: string, geography: string): string {
   if (sector !== 'general') {
     const sectorDescriptions: Record<string, string> = {
-      technology: 'Diversifikuotas technologijų sektorius ETF su daugiau nei 100 įmonių',
-      healthcare: 'Sveikatos sektorius ir biotechnologijų ETF',
-      energy: 'Atsinaujinančios energetikos ir energijos ETF',
-      automotive: 'Automobilių pramonės ir elektrinių automobilių ETF',
-      realestate: 'Nekilnojamojo turto investicinių fondų (REIT) ETF'
+      technology: 'Diversifikuotas technologijų sektorius ETF su daugiau nei 100 įmonių (Apple, Microsoft, Google)',
+      healthcare: 'Sveikatos sektorius ir biotechnologijų ETF (Johnson & Johnson, Pfizer, UnitedHealth)',
+      energy: 'Atsinaujinančios energetikos ir energijos ETF (Exxon, Chevron, NextEra Energy)',
+      automotive: 'Automobilių pramonės ir elektrinių automobilių ETF (Tesla, Ford, GM)',
+      realestate: 'Nekilnojamojo turto investicinių fondų (REIT) ETF (diversifikuotas NT portfolio)'
     };
     return sectorDescriptions[sector] || 'Plačiai diversifikuotas ETF fondas';
   }
 
   const geoDescriptions: Record<string, string> = {
-    global: 'Pasaulio akcijų indeksas su daugiau nei 4000 įmonių',
-    europe: 'Europos šalių akcijų indeksas',
-    emerging: 'Besivystančių šalių akcijų indeksas'
+    global: 'Pasaulio akcijų indeksas su daugiau nei 4000 įmonių (Apple, Microsoft, ASML, Samsung)',
+    europe: 'Europos šalių akcijų indeksas (ASML, SAP, LVMH, Nestle)',
+    emerging: 'Besivystančių šalių akcijų indeksas (Taiwan Semi, Alibaba, Samsung, Tencent)'
   };
 
   return geoDescriptions[geography] || 'Plačiai diversifikuotas ETF fondas';

@@ -18,12 +18,12 @@ interface InvestmentFormProps {
 export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
   const [formData, setFormData] = useState<InvestmentInputs>({
     age: 25,
-    familySituation: '',
+    familySituation: 'single',
     initialSum: 1000,
     monthlyContribution: 200,
     timeHorizon: 10,
-    riskTolerance: 1,
-    managementPreference: 1,
+    riskTolerance: 0,
+    managementPreference: 0,
     sectorPreference: 'general',
     geographyPreference: 'global'
   });
@@ -181,7 +181,6 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
           type="submit" 
           size="lg"
           className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
-          disabled={!formData.familySituation}
         >
           Gauti investavimo rekomendacijas
         </Button>

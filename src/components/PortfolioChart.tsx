@@ -5,7 +5,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioChartProps {
-  data: Array<{ year: number; value: number; invested: number }>;
+  data: Array<{ 
+    year: number; 
+    value: number; 
+    invested: number;
+    bestCase?: number;
+    worstCase?: number;
+  }>;
   period: number;
   inputs: InvestmentInputs;
 }
@@ -20,7 +26,7 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ data, period, in
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
-          <AreaChart data={data}>
+          <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="year" 
@@ -31,29 +37,66 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ data, period, in
               label={{ value: 'Vertė (€)', angle: -90, position: 'insideLeft' }}
             />
             <Tooltip 
-              formatter={(value: number, name: string) => [
-                formatCurrency(value), 
-                name === 'value' ? 'Portfolio vertė' : 'Investuota suma'
-              ]}
+              formatter={(value: number, name: string) => {
+                const labels: Record<string, string> = {
+                  'value': 'Vidutinis scenarijus',
+                  'invested': 'Investuota suma',
+                  'bestCase': 'Geriausias scenarijus',
+                  'worstCase': 'Blogiausias scenarijus'
+                };
+                return [formatCurrency(value), labels[name] || name];
+              }}
             />
-            <Area
+            <Line
               type="monotone"
               dataKey="invested"
-              stackId="1"
               stroke="#94A3B8"
-              fill="#94A3B8"
-              fillOpacity={0.6}
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
             />
-            <Area
+            <Line
+              type="monotone"
+              dataKey="worstCase"
+              stroke="#EF4444"
+              strokeWidth={2}
+              dot={false}
+            />
+            <Line
               type="monotone"
               dataKey="value"
-              stackId="2"
               stroke="#10B981"
-              fill="#10B981"
-              fillOpacity={0.8}
+              strokeWidth={3}
+              dot={false}
             />
-          </AreaChart>
+            <Line
+              type="monotone"
+              dataKey="bestCase"
+              stroke="#3B82F6"
+              strokeWidth={2}
+              dot={false}
+            />
+          </LineChart>
         </ResponsiveContainer>
+        
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-0.5 bg-gray-400" style={{ borderStyle: 'dashed' }}></div>
+            <span>Investuota suma</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-0.5 bg-red-500"></div>
+            <span>Blogiausias scenarijus</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-1 bg-green-500"></div>
+            <span>Vidutinis scenarijus</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-4 h-0.5 bg-blue-500"></div>
+            <span>Geriausias scenarijus</span>
+          </div>
+        </div>
         
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>

@@ -19,7 +19,7 @@ export const Header = () => {
           
           <div className="flex items-center space-x-2 text-green-600">
             <TrendingUp className="h-5 w-5" />
-            <span className="text-sm font-medium">Pradedantiesiems</span>
+            <span className="text-sm font-medium">Pažengęs</span>
           </div>
         </div>
       </div>

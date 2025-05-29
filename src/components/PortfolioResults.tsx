@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Input } from '@/components/ui/input';
 import { PortfolioChart } from '@/components/PortfolioChart';
 import { PortfolioBreakdown } from '@/components/PortfolioBreakdown';
 import { calculatePortfolio } from '@/utils/portfolioCalculator';
-import { AlertTriangle, ArrowLeft, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, TrendingUp, MessageCircle, LogIn } from 'lucide-react';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioResultsProps {
@@ -16,9 +17,28 @@ interface PortfolioResultsProps {
 
 export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onReset }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(inputs.timeHorizon);
+  const [showChat, setShowChat] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
   
   const portfolio = calculatePortfolio(inputs);
   const projectionData = calculateProjections(inputs, selectedPeriod);
+
+  const handleChatSubmit = () => {
+    if (!isLoggedIn) {
+      alert('Prisijunkite su Google paskyra, kad galėtumėte užduoti klausimus apie portfolio');
+      return;
+    }
+    // Here would be the LLM integration
+    console.log('Sending to LLM:', { message: chatMessage, portfolio, inputs });
+    setChatMessage('');
+  };
+
+  const handleLogin = () => {
+    // Mock login for now
+    setIsLoggedIn(true);
+    alert('Sėkmingai prisijungėte!');
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -35,9 +55,20 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           </Button>
           <h2 className="text-3xl font-bold text-gray-900">Jūsų investavimo planas</h2>
         </div>
-        <div className="flex items-center space-x-2 text-green-600">
-          <TrendingUp className="h-5 w-5" />
-          <span className="font-medium">{portfolio.riskLevel}</span>
+        <div className="flex items-center space-x-4">
+          {!isLoggedIn && (
+            <Button 
+              onClick={handleLogin}
+              className="flex items-center space-x-2"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Prisijungti</span>
+            </Button>
+          )}
+          <div className="flex items-center space-x-2 text-green-600">
+            <TrendingUp className="h-5 w-5" />
+            <span className="font-medium">{portfolio.riskLevel}</span>
+          </div>
         </div>
       </div>
 
@@ -53,6 +84,35 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
 
       {/* Portfolio sudėtis */}
       <PortfolioBreakdown portfolio={portfolio} />
+
+      {/* LLM Chat sekcija */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <MessageCircle className="h-5 w-5" />
+            <span>Klauskite apie savo portfolio</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex space-x-2">
+            <Input
+              placeholder="Užduokite klausimą apie savo investavimo strategiją..."
+              value={chatMessage}
+              onChange={(e) => setChatMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
+              className="flex-1"
+            />
+            <Button onClick={handleChatSubmit}>
+              Klausti
+            </Button>
+          </div>
+          {!isLoggedIn && (
+            <p className="text-sm text-gray-600 mt-2">
+              Prisijunkite su Google paskyra, kad galėtumėte užduoti klausimus
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Laikotarpio pasirinkimas */}
       <Card>
@@ -114,16 +174,17 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
   );
 };
 
-// Papildoma funkcija projekcijų skaičiavimui
+// Papildoma funkcija projekcijų skaičiavimui su scenarijais
 function calculateProjections(inputs: InvestmentInputs, period: number) {
   const portfolio = calculatePortfolio(inputs);
-  const monthlyReturn = getExpectedReturn(portfolio.riskLevel) / 12;
+  const baseReturn = getExpectedReturn(portfolio.riskLevel);
   
   const data = [];
   let currentValue = inputs.initialSum;
   
   for (let month = 0; month <= period * 12; month++) {
     if (month > 0) {
+      const monthlyReturn = baseReturn / 12;
       currentValue = currentValue * (1 + monthlyReturn) + inputs.monthlyContribution;
     }
     
@@ -131,7 +192,9 @@ function calculateProjections(inputs: InvestmentInputs, period: number) {
       data.push({
         year: month / 12,
         value: Math.round(currentValue),
-        invested: inputs.initialSum + inputs.monthlyContribution * month
+        invested: inputs.initialSum + inputs.monthlyContribution * month,
+        bestCase: Math.round(currentValue * 1.3), // 30% better than median
+        worstCase: Math.round(currentValue * 0.7)  // 30% worse than median
       });
     }
   }
