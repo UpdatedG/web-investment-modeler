@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -62,6 +63,11 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
                   `${value}%`, 
                   formatInstrumentNameForTooltip(props.payload.displayName)
                 ]}
+              />
+              <Legend 
+                verticalAlign="bottom" 
+                height={36}
+                formatter={(value, entry) => entry.payload.displayName}
               />
             </PieChart>
           </ResponsiveContainer>
