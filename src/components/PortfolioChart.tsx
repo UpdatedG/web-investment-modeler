@@ -1,8 +1,7 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Calculator } from 'lucide-react';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioChartProps {
@@ -23,9 +22,7 @@ interface PortfolioChartProps {
 export const PortfolioChart: React.FC<PortfolioChartProps> = ({ 
   data, 
   period, 
-  inputs, 
-  showDebugTable, 
-  onToggleDebugTable 
+  inputs
 }) => {
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -39,21 +36,11 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Portfolio augimo projekcija ({period} metų)</CardTitle>
-            <p className="text-sm text-gray-600">
-              Projekcijos pagrįstos realiais istoriniais duomenimis su atsitiktiniu volatilumu
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={onToggleDebugTable}
-            className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 hover:from-blue-600 hover:to-purple-700 animate-pulse hover:animate-none transition-all duration-3000 shadow-lg hover:shadow-xl"
-          >
-            <Calculator className="h-4 w-4" />
-            <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>
-          </Button>
+        <div>
+          <CardTitle>Portfolio augimo projekcija ({period} metų)</CardTitle>
+          <p className="text-sm text-gray-600">
+            Projekcijos pagrįstos realiais istoriniais duomenimis su atsitiktiniu volatilumu
+          </p>
         </div>
       </CardHeader>
       <CardContent>

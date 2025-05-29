@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -23,7 +24,12 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
   const [chatMessage, setChatMessage] = useState('');
   
   const portfolio = calculatePortfolio(inputs);
-  const { projectionData, yearlyCalculations } = calculateDetailedProjections(inputs, selectedPeriod);
+  
+  // Calculate projections only once using useMemo
+  const { projectionData, yearlyCalculations } = useMemo(() => 
+    calculateDetailedProjections(inputs, selectedPeriod), 
+    [inputs, selectedPeriod]
+  );
 
   const handleChatSubmit = () => {
     if (!isLoggedIn) {
@@ -153,7 +159,17 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
       {/* Prognozės santrauka */}
       <Card>
         <CardHeader>
-          <CardTitle>Prognozės santrauka ({selectedPeriod} metų)</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Prognozės santrauka ({selectedPeriod} metų)</CardTitle>
+            <Button
+              variant="outline"
+              onClick={() => setShowDebugTable(!showDebugTable)}
+              className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 hover:from-blue-600 hover:to-purple-700 animate-pulse hover:animate-none transition-all duration-3000 shadow-lg hover:shadow-xl"
+            >
+              <Calculator className="h-4 w-4" />
+              <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
