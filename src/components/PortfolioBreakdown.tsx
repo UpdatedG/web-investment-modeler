@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -11,18 +10,15 @@ interface PortfolioBreakdownProps {
 export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfolio }) => {
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
   
-  // Function to format instrument names with line breaks after each ticker for pie chart ONLY
-  const formatInstrumentNameForChart = (name: string) => {
-    console.log('Original name:', name);
+  // Function to format instrument names with line breaks for tooltips
+  const formatInstrumentNameForTooltip = (name: string) => {
     // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
     const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
     if (tickerMatch) {
       const [, etfName, tickers, rest] = tickerMatch;
       // Split tickers by comma and add line breaks after each
       const formattedTickers = tickers.split(',').map(ticker => ticker.trim()).join(',\n');
-      const formatted = `${etfName}\n(${formattedTickers})${rest ? '\n' + rest : ''}`.trim();
-      console.log('Formatted for chart:', formatted);
-      return formatted;
+      return `${etfName}\n(${formattedTickers})${rest ? '\n' + rest : ''}`.trim();
     }
     return name;
   };
@@ -30,12 +26,12 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
   const chartData = portfolio.instruments.map((instrument, index) => ({
     ...instrument,
     fill: colors[index % colors.length],
-    // Format name for pie chart with line breaks after each ticker
-    chartName: formatInstrumentNameForChart(instrument.name)
+    // Keep original name for chart data
+    displayName: instrument.name
   }));
 
-  // Custom label function for pie chart
-  const renderCustomLabel = ({ chartName, percentage }: any) => {
+  // Custom label function for pie chart - show percentage only
+  const renderCustomLabel = ({ percentage }: any) => {
     return `${percentage}%`;
   };
 
@@ -62,7 +58,10 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value, name, props) => [`${value}%`, props.payload.chartName]}
+                formatter={(value, name, props) => [
+                  `${value}%`, 
+                  formatInstrumentNameForTooltip(props.payload.displayName)
+                ]}
               />
             </PieChart>
           </ResponsiveContainer>

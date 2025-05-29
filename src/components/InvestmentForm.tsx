@@ -97,7 +97,9 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
           <CardContent className="pt-6">
             <RiskDial 
               value={formData.riskTolerance} 
-              onChange={(value) => updateField('riskTolerance', value)} 
+              onChange={(value) => updateField('riskTolerance', value)}
+              age={formData.age}
+              familySituation={formData.familySituation}
             />
           </CardContent>
         </Card>
