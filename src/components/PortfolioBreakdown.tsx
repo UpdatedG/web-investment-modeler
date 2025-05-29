@@ -13,10 +13,25 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
   
   const chartData = portfolio.instruments.map((instrument, index) => ({
     ...instrument,
-    fill: colors[index % colors.length]
+    fill: colors[index % colors.length],
+    // Format name for pie chart with line breaks after each ticker
+    chartName: formatInstrumentNameForChart(instrument.name)
   }));
 
-  // Function to format instrument names with line breaks after each ticker
+  // Function to format instrument names with line breaks after each ticker for pie chart
+  const formatInstrumentNameForChart = (name: string) => {
+    // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
+    const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
+    if (tickerMatch) {
+      const [, etfName, tickers, rest] = tickerMatch;
+      // Split tickers by comma and add line breaks after each
+      const formattedTickers = tickers.split(',').map(ticker => ticker.trim()).join(',\n');
+      return `${etfName} (${formattedTickers})\n${rest}`.trim();
+    }
+    return name;
+  };
+
+  // Function to format instrument names with line breaks after each ticker for the list
   const formatInstrumentName = (name: string) => {
     // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
     const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
@@ -45,7 +60,7 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
                 cy="50%"
                 outerRadius={100}
                 dataKey="percentage"
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
+                label={({ chartName, percentage }) => `${chartName}: ${percentage}%`}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />

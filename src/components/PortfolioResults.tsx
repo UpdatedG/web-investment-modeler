@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,6 +19,11 @@ interface PortfolioResultsProps {
 export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onReset }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(inputs.timeHorizon);
   const [showDebugTable, setShowDebugTable] = useState(false);
+  
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const portfolio = calculatePortfolio(inputs);
   
