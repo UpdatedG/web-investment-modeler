@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertTriangle, TrendingDown, TrendingUp } from 'lucide-react';
 import type { YearlyCalculation } from '@/utils/portfolioCalculator';
 
 interface CalculationsDebugTableProps {
@@ -23,9 +24,12 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
             <TableHeader>
               <TableRow>
                 <TableHead>Metai</TableHead>
+                <TableHead>Statusas</TableHead>
                 <TableHead>Instrumentas</TableHead>
                 <TableHead>Alokacija %</TableHead>
                 <TableHead>Metinė grąža %</TableHead>
+                <TableHead>Crash nuostolis %</TableHead>
+                <TableHead>Atsigavimo progresija</TableHead>
                 <TableHead>Vertė</TableHead>
                 <TableHead>Bendra vertė</TableHead>
                 <TableHead>Investuota</TableHead>
@@ -34,10 +38,35 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
             <TableBody>
               {yearlyCalculations.map((yearCalc) => (
                 yearCalc.instruments.map((instrument, index) => (
-                  <TableRow key={`${yearCalc.year}-${index}`}>
+                  <TableRow key={`${yearCalc.year}-${index}`} className={
+                    yearCalc.isCrashYear ? 'bg-red-50' : 
+                    yearCalc.isRecoveryYear ? 'bg-yellow-50' : ''
+                  }>
                     {index === 0 && (
                       <TableCell rowSpan={yearCalc.instruments.length} className="font-medium">
                         {yearCalc.year}
+                      </TableCell>
+                    )}
+                    {index === 0 && (
+                      <TableCell rowSpan={yearCalc.instruments.length} className="text-center">
+                        {yearCalc.isCrashYear && (
+                          <div className="flex items-center justify-center space-x-1 text-red-600">
+                            <TrendingDown className="h-4 w-4" />
+                            <span className="text-xs font-medium">CRASH</span>
+                          </div>
+                        )}
+                        {yearCalc.isRecoveryYear && !yearCalc.isCrashYear && (
+                          <div className="flex items-center justify-center space-x-1 text-orange-600">
+                            <TrendingUp className="h-4 w-4" />
+                            <span className="text-xs font-medium">RECOVERY</span>
+                          </div>
+                        )}
+                        {!yearCalc.isCrashYear && !yearCalc.isRecoveryYear && yearCalc.year > 0 && (
+                          <span className="text-xs text-green-600 font-medium">NORMAL</span>
+                        )}
+                        {yearCalc.year === 0 && (
+                          <span className="text-xs text-gray-600 font-medium">START</span>
+                        )}
                       </TableCell>
                     )}
                     <TableCell className="font-medium">{instrument.name}</TableCell>
@@ -47,6 +76,22 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
                       instrument.annualReturn < 0 ? 'text-red-600' : 'text-gray-600'
                     }>
                       {yearCalc.year === 0 ? '-' : formatPercentage(instrument.annualReturn)}
+                    </TableCell>
+                    <TableCell className="text-red-600">
+                      {instrument.crashLoss ? formatPercentage(instrument.crashLoss) : '-'}
+                    </TableCell>
+                    <TableCell>
+                      {instrument.isRecovering && instrument.recoveryProgress !== undefined ? (
+                        <div className="flex items-center space-x-2">
+                          <div className="w-12 bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-orange-500 h-2 rounded-full transition-all" 
+                              style={{ width: `${instrument.recoveryProgress * 100}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs">{(instrument.recoveryProgress * 100).toFixed(0)}%</span>
+                        </div>
+                      ) : '-'}
                     </TableCell>
                     <TableCell>{formatCurrency(instrument.value)}</TableCell>
                     {index === 0 && (
@@ -66,21 +111,49 @@ export const CalculationsDebugTable: React.FC<CalculationsDebugTableProps> = ({ 
           </Table>
         </div>
         
-        <div className="mt-4 text-sm text-gray-600">
-          <p><strong>Pastaba:</strong> Metinės grąžos yra atsitiktinai generuojamos pagal kiekvieno instrumento istorinį grąžos intervalą su papildoma volatilumu.</p>
-          <p><strong>Grąžos intervalai:</strong></p>
-          <ul className="list-disc list-inside mt-2">
-            <li>Globalūs ETF: 12.8% - 13.2%</li>
-            <li>Technologijų ETF: 18.3% - 18.8%</li>
-            <li>Sveikatos ETF: 8.5% - 10.2%</li>
-            <li>Energetikos ETF: 2.1% - 4.8%</li>
-            <li>Europos ETF: 6.8% - 8.2%</li>
-            <li>Besivystančių rinkų ETF: 4.2% - 6.1%</li>
-            <li>Akcijos (Large Cap): 10% - 15%</li>
-            <li>Leveraged ETF (3x): 25% - 35%</li>
-            <li>Kriptovaliutos: -20% - +60%</li>
-            <li>Moonshot aktyvai: -50% - +100%</li>
-          </ul>
+        <div className="mt-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="flex items-center space-x-2 p-3 bg-red-50 rounded-lg">
+              <TrendingDown className="h-4 w-4 text-red-600" />
+              <div>
+                <p className="font-medium text-red-800">Crash metai</p>
+                <p className="text-red-600">18.7% tikimybė per metus</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-3 bg-yellow-50 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-orange-600" />
+              <div>
+                <p className="font-medium text-orange-800">Atsigavimo metai</p>
+                <p className="text-orange-600">1-1.7 metų trukmė</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+              <AlertTriangle className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="font-medium text-green-800">Normalūs metai</p>
+                <p className="text-green-600">Standartinės grąžos</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="text-sm text-gray-600 space-y-2">
+            <p><strong>Crash scenarijaus modelis:</strong></p>
+            <ul className="list-disc list-inside space-y-1">
+              <li><strong>Tikimybė:</strong> 18.7% kiekvienais metais</li>
+              <li><strong>Nuostoliai:</strong> 15-45% priklausomai nuo aktyvų volatilumu</li>
+              <li><strong>Atsigavimas:</strong> 1-1.7 metų (atsitiktinai parenkama)</li>
+              <li><strong>Skaičiavimas:</strong> Atsigavimo metu grįžtama prie ankstesnių metų lygio, likusi metų dalis skaičiuojama normaliai</li>
+            </ul>
+            
+            <p className="mt-4"><strong>Aktyvų crash nuostoliai:</strong></p>
+            <ul className="list-disc list-inside mt-2 space-y-1">
+              <li>Mažo volatilumu (Auksas, ETF): 15-25%</li>
+              <li>Vidutinio volatilumu (Augimo akcijos): 20-30%</li>
+              <li>Didelio volatilumu (Sektorių ETF): 25-40%</li>
+              <li>Labai didelio volatilumu (Kripto ETF, Leveraged): 35-45%</li>
+              <li>Ekstremalu volatilumu (Kripto, Moonshot): 40-45%</li>
+            </ul>
+          </div>
         </div>
       </CardContent>
     </Card>

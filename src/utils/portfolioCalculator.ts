@@ -1,4 +1,3 @@
-
 import type { InvestmentInputs, PortfolioAllocation } from '@/pages/Index';
 
 export interface YearlyCalculation {
@@ -8,9 +7,15 @@ export interface YearlyCalculation {
     percentage: number;
     annualReturn: number;
     value: number;
+    crashLoss?: number;
+    isRecovering?: boolean;
+    recoveryProgress?: number;
   }>;
   totalValue: number;
   totalInvested: number;
+  isCrashYear?: boolean;
+  isRecoveryYear?: boolean;
+  recoveryTimeRemaining?: number;
 }
 
 export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocation {
@@ -185,6 +190,45 @@ function getETFReturnRange(sector: string, geography: string): [number, number] 
   return geoReturns[geography] || [12.8, 13.2];
 }
 
+// Calculate crash loss based on asset volatility
+function calculateCrashLoss(instrumentName: string): number {
+  // Map instruments to volatility levels and crash loss ranges
+  const crashLossMap: Record<string, [number, number]> = {
+    // Low volatility assets (bonds, utilities equivalent)
+    'Auksas': [15, 20],
+    'ETF': [15, 25],
+    
+    // Moderate volatility (broad market ETFs)
+    'Augimo akcijos': [20, 30],
+    
+    // High volatility (sector/regional ETFs)
+    'Technologijų ETF': [25, 35],
+    'Sveikatos sektorius ETF': [25, 35],
+    'Energetikos ETF': [25, 35],
+    'Europos rinkų ETF': [25, 35],
+    'Besivystančių rinkų ETF': [30, 40],
+    
+    // Very high volatility (individual stocks, leveraged)
+    'Kriptovaliutų ETF': [35, 45],
+    'Leveraged produktai': [40, 45],
+    'Opcionai': [40, 45],
+    
+    // Extreme volatility (crypto, moonshots)
+    'Kriptovaliutos': [40, 45],
+    'Moonshot aktyvai': [40, 45]
+  };
+  
+  // Find matching instrument type
+  for (const [key, range] of Object.entries(crashLossMap)) {
+    if (instrumentName.includes(key) || instrumentName.includes('ETF')) {
+      return range[0] + Math.random() * (range[1] - range[0]);
+    }
+  }
+  
+  // Default to moderate crash loss
+  return 20 + Math.random() * 10; // 20-30%
+}
+
 // Generate random return within asset's range with additional volatility
 export function generateRandomReturn(baseRange: [number, number], volatilityFactor: number = 1): number {
   const [min, max] = baseRange;
@@ -197,7 +241,7 @@ export function generateRandomReturn(baseRange: [number, number], volatilityFact
   return Math.max(-90, finalReturn); // Cap losses at -90%
 }
 
-// Calculate detailed projections with yearly breakdown
+// Calculate detailed projections with yearly breakdown including crash scenarios
 export function calculateDetailedProjections(inputs: InvestmentInputs, period: number): { 
   projectionData: Array<{ year: number; value: number; invested: number; bestCase: number; worstCase: number; }>;
   yearlyCalculations: YearlyCalculation[];
@@ -207,9 +251,16 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
   const projectionData = [];
   
   let currentValue = inputs.initialSum;
+  let recoveryState: { 
+    isRecovering: boolean; 
+    targetValue: number; 
+    recoveryTimeRemaining: number; 
+    startRecoveryValue: number;
+  } = { isRecovering: false, targetValue: 0, recoveryTimeRemaining: 0, startRecoveryValue: 0 };
   
   for (let year = 0; year <= period; year++) {
     const totalInvested = inputs.initialSum + inputs.monthlyContribution * 12 * year;
+    const annualContribution = inputs.monthlyContribution * 12;
     
     if (year === 0) {
       // Initial year
@@ -226,31 +277,124 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
       };
       yearlyCalculations.push(initialCalc);
     } else {
-      // Calculate returns for each instrument
+      // Check for crash (18.7% probability)
+      const isCrashYear = !recoveryState.isRecovering && Math.random() < 0.187;
+      
       const yearCalculation: YearlyCalculation = {
         year,
         instruments: [],
         totalValue: 0,
-        totalInvested
+        totalInvested,
+        isCrashYear,
+        isRecoveryYear: recoveryState.isRecovering,
+        recoveryTimeRemaining: recoveryState.recoveryTimeRemaining
       };
       
       let newTotalValue = 0;
       
-      portfolio.instruments.forEach(instrument => {
-        const allocation = currentValue * (instrument.percentage / 100);
-        const returnRange = (instrument as any).returnRange || [5, 10];
-        const annualReturn = generateRandomReturn(returnRange);
-        const instrumentValue = allocation * (1 + annualReturn / 100) + (inputs.monthlyContribution * 12 * (instrument.percentage / 100));
+      if (isCrashYear) {
+        // Crash year - calculate losses and set up recovery
+        const preContributionValue = currentValue;
+        recoveryState.targetValue = preContributionValue;
+        recoveryState.recoveryTimeRemaining = 1 + Math.random() * 0.7; // 1-1.7 years
+        recoveryState.isRecovering = true;
         
-        yearCalculation.instruments.push({
-          name: instrument.name,
-          percentage: instrument.percentage,
-          annualReturn: annualReturn,
-          value: instrumentValue
+        portfolio.instruments.forEach(instrument => {
+          const allocation = preContributionValue * (instrument.percentage / 100);
+          const crashLoss = calculateCrashLoss(instrument.name);
+          const instrumentValue = allocation * (1 - crashLoss / 100) + (annualContribution * (instrument.percentage / 100));
+          
+          yearCalculation.instruments.push({
+            name: instrument.name,
+            percentage: instrument.percentage,
+            annualReturn: -crashLoss,
+            value: instrumentValue,
+            crashLoss,
+            isRecovering: false
+          });
+          
+          newTotalValue += instrumentValue;
         });
         
-        newTotalValue += instrumentValue;
-      });
+        recoveryState.startRecoveryValue = newTotalValue;
+        
+      } else if (recoveryState.isRecovering) {
+        // Recovery year
+        const recoveryProgress = Math.min(1, (2 - recoveryState.recoveryTimeRemaining) / (2 - (recoveryState.recoveryTimeRemaining - 1)));
+        const targetValueWithContributions = recoveryState.targetValue + annualContribution;
+        
+        if (recoveryState.recoveryTimeRemaining <= 1) {
+          // Recovery complete this year - calculate recovery + prorated normal returns
+          const recoveryPortion = recoveryState.recoveryTimeRemaining;
+          const normalPortion = 1 - recoveryPortion;
+          
+          portfolio.instruments.forEach(instrument => {
+            const allocation = currentValue * (instrument.percentage / 100);
+            const returnRange = (instrument as any).returnRange || [5, 10];
+            const normalReturn = generateRandomReturn(returnRange);
+            
+            // Recovery to target, then normal returns for remainder of year
+            const recoveryValue = targetValueWithContributions * (instrument.percentage / 100);
+            const normalGrowth = recoveryValue * (normalReturn / 100) * normalPortion;
+            const instrumentValue = recoveryValue + normalGrowth;
+            
+            yearCalculation.instruments.push({
+              name: instrument.name,
+              percentage: instrument.percentage,
+              annualReturn: normalReturn * normalPortion,
+              value: instrumentValue,
+              isRecovering: true,
+              recoveryProgress: 1
+            });
+            
+            newTotalValue += instrumentValue;
+          });
+          
+          recoveryState.isRecovering = false;
+          
+        } else {
+          // Still recovering
+          const progressThisYear = Math.min(1, 1 / recoveryState.recoveryTimeRemaining);
+          const progressValue = recoveryState.startRecoveryValue + 
+            (targetValueWithContributions - recoveryState.startRecoveryValue) * 
+            (1 - (recoveryState.recoveryTimeRemaining - 1) / (2 - (recoveryState.recoveryTimeRemaining - 1)));
+          
+          portfolio.instruments.forEach(instrument => {
+            const instrumentValue = progressValue * (instrument.percentage / 100);
+            
+            yearCalculation.instruments.push({
+              name: instrument.name,
+              percentage: instrument.percentage,
+              annualReturn: 0, // Recovery year, no additional returns
+              value: instrumentValue,
+              isRecovering: true,
+              recoveryProgress: 1 - (recoveryState.recoveryTimeRemaining - 1) / (2 - (recoveryState.recoveryTimeRemaining - 1))
+            });
+            
+            newTotalValue += instrumentValue;
+          });
+          
+          recoveryState.recoveryTimeRemaining -= 1;
+        }
+        
+      } else {
+        // Normal year - calculate standard returns
+        portfolio.instruments.forEach(instrument => {
+          const allocation = currentValue * (instrument.percentage / 100);
+          const returnRange = (instrument as any).returnRange || [5, 10];
+          const annualReturn = generateRandomReturn(returnRange);
+          const instrumentValue = allocation * (1 + annualReturn / 100) + (annualContribution * (instrument.percentage / 100));
+          
+          yearCalculation.instruments.push({
+            name: instrument.name,
+            percentage: instrument.percentage,
+            annualReturn: annualReturn,
+            value: instrumentValue
+          });
+          
+          newTotalValue += instrumentValue;
+        });
+      }
       
       yearCalculation.totalValue = newTotalValue;
       currentValue = newTotalValue;
