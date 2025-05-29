@@ -14,22 +14,19 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
   const minYears = 1;
   const maxYears = 50;
   
-  // Calculate angle based on years (270° range, starting from -135° to 135°)
   const getAngleFromYears = (years: number) => {
     const normalizedYears = Math.max(0, Math.min(1, (years - minYears) / (maxYears - minYears)));
-    return normalizedYears * 270 - 135; // -135° to 135°
+    return 210 + normalizedYears * 300;
   };
   
   const getYearsFromAngle = (angle: number) => {
-    // Normalize angle to 0-270 range
-    const normalizedAngle = Math.max(0, Math.min(270, angle + 135)) / 270;
+    angle = ((angle % 360) + 360) % 360;
+    if (angle < 210) angle += 360;
+    if (angle > 510) angle = 510;
+    if (angle < 210) angle = 210;
+    
+    const normalizedAngle = (angle - 210) / 300;
     return Math.round(minYears + normalizedAngle * (maxYears - minYears));
-  };
-  
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    updateValue(e.clientX, e.clientY);
   };
   
   const updateValue = (clientX: number, clientY: number) => {
@@ -42,17 +39,19 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
     const deltaX = clientX - centerX;
     const deltaY = clientY - centerY;
     
-    // Calculate angle in degrees (-180 to 180)
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-    
-    // Convert to our dial range (-135° to 135°)
-    if (angle < -135) angle = -135;
-    if (angle > 135) angle = 135;
+    angle = ((angle % 360) + 360) % 360;
     
     const newYears = getYearsFromAngle(angle);
     if (newYears !== value && newYears >= minYears && newYears <= maxYears) {
       onChange(newYears);
     }
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    updateValue(e.clientX, e.clientY);
   };
   
   const handleMouseMove = (e: MouseEvent) => {
@@ -74,102 +73,72 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
   }, [isDragging]);
   
   const currentAngle = getAngleFromYears(value);
+  const radius = 80;
+  const strokeWidth = 8;
+  const handleRadius = 12;
+  
+  const handleX = Math.cos((currentAngle - 90) * Math.PI / 180) * radius + 100;
+  const handleY = Math.sin((currentAngle - 90) * Math.PI / 180) * radius + 100;
+  
+  const startAngle = 210;
+  const endAngle = 510;
+  const startX = Math.cos((startAngle - 90) * Math.PI / 180) * radius + 100;
+  const startY = Math.sin((startAngle - 90) * Math.PI / 180) * radius + 100;
+  const endX = Math.cos((endAngle - 90) * Math.PI / 180) * radius + 100;
+  const endY = Math.sin((endAngle - 90) * Math.PI / 180) * radius + 100;
+  
+  const activeEndX = Math.cos((currentAngle - 90) * Math.PI / 180) * radius + 100;
+  const activeEndY = Math.sin((currentAngle - 90) * Math.PI / 180) * radius + 100;
+  
+  const largeArcFlag = (currentAngle - startAngle) > 180 ? 1 : 0;
   
   return (
-    <div className="flex flex-col items-center space-y-4">
+    <div className="flex flex-col items-center space-y-6">
       <div className="text-center">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-100 mb-2">
           <Clock className="h-6 w-6 text-orange-600" />
         </div>
         <p className="text-lg font-semibold text-gray-800">Investavimo laikotarpis</p>
-        <p className="text-2xl font-bold text-orange-600">{value} {value === 1 ? 'metai' : 'metų'}</p>
+        <p className="text-3xl font-bold text-orange-600">{value}</p>
+        <p className="text-sm text-gray-500">{value === 1 ? 'metai' : 'metų'}</p>
       </div>
       
       <div 
         ref={dialRef}
-        className="relative w-48 h-48 cursor-grab active:cursor-grabbing select-none"
+        className="relative w-48 h-48 cursor-pointer select-none"
         onMouseDown={handleMouseDown}
       >
-        {/* Outer ring */}
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-orange-50 to-orange-100 shadow-lg border-4 border-orange-200"></div>
+        <svg width="200" height="200" className="absolute inset-0">
+          <path
+            d={`M ${startX} ${startY} A ${radius} ${radius} 0 1 1 ${endX} ${endY}`}
+            stroke="#e5e7eb"
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+          />
+          
+          <path
+            d={`M ${startX} ${startY} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${activeEndX} ${activeEndY}`}
+            stroke="#f97316"
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="round"
+          />
+          
+          <circle
+            cx={handleX}
+            cy={handleY}
+            r={handleRadius}
+            fill="white"
+            stroke="#f97316"
+            strokeWidth="3"
+            className="cursor-grab active:cursor-grabbing drop-shadow-md"
+          />
+        </svg>
         
-        {/* Inner dial face */}
-        <div className="absolute inset-6 rounded-full bg-white shadow-inner border border-gray-100">
-          {/* Arc background */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 120 120">
-            <path
-              d="M 15 75 A 45 45 0 1 1 105 75"
-              stroke="#e5e7eb"
-              strokeWidth="2"
-              fill="none"
-            />
-          </svg>
-          
-          {/* Year markers */}
-          {[5, 10, 20, 30, 40].map((years) => {
-            const markerAngle = getAngleFromYears(years);
-            return (
-              <div
-                key={years}
-                className="absolute w-0.5 bg-orange-300 origin-bottom"
-                style={{
-                  height: '12px',
-                  left: '50%',
-                  bottom: '50%',
-                  transform: `translateX(-50%) rotate(${markerAngle}deg)`,
-                }}
-              />
-            );
-          })}
-          
-          {/* Year numbers positioned around the arc */}
-          {[5, 10, 20, 30, 40].map((years) => {
-            const markerAngle = getAngleFromYears(years);
-            const radian = (markerAngle * Math.PI) / 180;
-            const radius = 35;
-            const x = Math.cos(radian) * radius;
-            const y = Math.sin(radian) * radius;
-            
-            return (
-              <div
-                key={`label-${years}`}
-                className="absolute text-xs font-bold text-orange-600"
-                style={{
-                  left: `calc(50% + ${x}px - 6px)`,
-                  top: `calc(50% + ${y}px - 6px)`,
-                }}
-              >
-                {years}
-              </div>
-            );
-          })}
-          
-          {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-orange-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"></div>
-          
-          {/* Dial pointer with arrow */}
-          <div
-            className="absolute origin-bottom z-20 transition-transform duration-100"
-            style={{
-              width: '2px',
-              height: '35px',
-              left: '50%',
-              bottom: '50%',
-              transform: `translateX(-50%) rotate(${currentAngle}deg)`,
-              background: 'linear-gradient(to top, #ea580c, #f97316)',
-            }}
-          >
-            {/* Arrow tip */}
-            <div 
-              className="absolute -top-1 left-1/2 transform -translate-x-1/2"
-              style={{
-                width: '0',
-                height: '0',
-                borderLeft: '3px solid transparent',
-                borderRight: '3px solid transparent',
-                borderBottom: '6px solid #ea580c',
-              }}
-            />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center bg-white rounded-full w-16 h-16 flex items-center justify-center shadow-sm border">
+            <span className="text-lg font-bold text-gray-700">{value}</span>
           </div>
         </div>
       </div>
