@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Clock } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
+import { EnhancedSlider } from '@/components/ui/enhanced-slider';
 
 interface TimeHorizonDialProps {
   value: number;
@@ -28,12 +28,13 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
       </div>
       
       <div className="w-48 space-y-4">
-        <Slider
+        <EnhancedSlider
           value={[value]}
           onValueChange={handleSliderChange}
           min={minYears}
           max={maxYears}
           step={1}
+          colorScheme="orange"
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">

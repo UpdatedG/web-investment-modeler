@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { User } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
+import { EnhancedSlider } from '@/components/ui/enhanced-slider';
 
 interface AgeDialProps {
   value: number;
@@ -28,12 +28,13 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
       </div>
       
       <div className="w-48 space-y-4">
-        <Slider
+        <EnhancedSlider
           value={[value]}
           onValueChange={handleSliderChange}
           min={minAge}
           max={maxAge}
           step={1}
+          colorScheme="blue"
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">

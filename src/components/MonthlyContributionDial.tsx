@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { PiggyBank } from 'lucide-react';
-import { Slider } from '@/components/ui/slider';
+import { EnhancedSlider } from '@/components/ui/enhanced-slider';
 
 interface MonthlyContributionDialProps {
   value: number;
@@ -29,12 +29,13 @@ export const MonthlyContributionDial: React.FC<MonthlyContributionDialProps> = (
       </div>
       
       <div className="w-48 space-y-4">
-        <Slider
+        <EnhancedSlider
           value={[value]}
           onValueChange={handleSliderChange}
           min={minContribution}
           max={maxContribution}
           step={step}
+          colorScheme="purple"
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">
