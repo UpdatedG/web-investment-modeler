@@ -26,11 +26,11 @@ export const PortfolioResultsEn: React.FC<PortfolioResultsEnProps> = ({ inputs, 
     window.scrollTo(0, 0);
   }, []);
   
-  const portfolio = calculatePortfolio(inputs);
+  const portfolio = calculatePortfolio(inputs, 'en');
   
   // Calculate projections only once using useMemo
   const { projectionData, yearlyCalculations } = useMemo(() => 
-    calculateDetailedProjections(inputs, selectedPeriod), 
+    calculateDetailedProjections(inputs, selectedPeriod, 'en'), 
     [inputs, selectedPeriod]
   );
 

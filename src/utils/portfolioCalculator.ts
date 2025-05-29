@@ -23,49 +23,49 @@ export interface YearlyCalculation {
   correctionRecoveryTimeRemaining?: number;
 }
 
-export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocation {
+export function calculatePortfolio(inputs: InvestmentInputs, language: string = 'lt'): PortfolioAllocation {
   const { riskTolerance, sectorPreference, geographyPreference } = inputs;
   
   // Baziniai instrumentų aprašymai
   const baseInstruments = {
     etf: {
-      name: getETFName(sectorPreference, geographyPreference),
-      description: getETFDescription(sectorPreference, geographyPreference),
+      name: getETFName(sectorPreference, geographyPreference, language),
+      description: getETFDescription(sectorPreference, geographyPreference, language),
       returnRange: getETFReturnRange(sectorPreference, geographyPreference)
     },
     growthStock: {
-      name: 'Augimo akcijos',
-      description: 'Didelio potencialo įmonių akcijos (pvz. Apple, Microsoft, Tesla, Google)',
+      name: language === 'en' ? 'Growth stocks' : 'Augimo akcijos',
+      description: language === 'en' ? 'High potential company stocks (e.g. Apple, Microsoft, Tesla, Google)' : 'Didelio potencialo įmonių akcijos (pvz. Apple, Microsoft, Tesla, Google)',
       returnRange: [10, 15] // Generic stocks (Large Cap)
     },
     cryptoETF: {
-      name: 'Kriptovaliutų ETF',
-      description: 'Diversifikuotas kriptovaliutų fondas (pvz. BITO, ETHE)',
+      name: language === 'en' ? 'Crypto ETF' : 'Kriptovaliutų ETF',
+      description: language === 'en' ? 'Diversified cryptocurrency fund (e.g. BITO, ETHE)' : 'Diversifikuotas kriptovaliutų fondas (pvz. BITO, ETHE)',
       returnRange: [15, 35] // Crypto ETFs - using moderate estimate
     },
     crypto: {
-      name: 'Kriptovaliutos',
-      description: 'Tiesioginės kriptovaliutų investicijos (Bitcoin, Ethereum, Solana)',
+      name: language === 'en' ? 'Cryptocurrencies' : 'Kriptovaliutos',
+      description: language === 'en' ? 'Direct cryptocurrency investments (Bitcoin, Ethereum, Solana)' : 'Tiesioginės kriptovaliutų investicijos (Bitcoin, Ethereum, Solana)',
       returnRange: [-20, 60] // Extreme volatility
     },
     gold: {
-      name: 'Auksas',
-      description: 'Fizinis auksas arba aukso ETF (pvz. GLD, IAU) kaip infliacijos apsauga',
+      name: language === 'en' ? 'Gold' : 'Auksas',
+      description: language === 'en' ? 'Physical gold or gold ETF (e.g. GLD, IAU) as inflation hedge' : 'Fizinis auksas arba aukso ETF (pvz. GLD, IAU) kaip infliacijos apsauga',
       returnRange: [3, 8] // Conservative commodity
     },
     options: {
-      name: 'Opcionai',
-      description: 'Akcijų opcionai didelio potencialo pelno gavimui (SPY, QQQ opcionai)',
+      name: language === 'en' ? 'Options' : 'Opcionai',
+      description: language === 'en' ? 'Stock options for high potential gains (SPY, QQQ options)' : 'Akcijų opcionai didelio potencialo pelno gavimui (SPY, QQQ opcionai)',
       returnRange: [-30, 80] // Very high volatility
     },
     leveraged: {
-      name: 'Leveraged produktai',
-      description: 'Finanisniais svertais pagrįsti investavimo produktai (pvz. TQQQ, UPRO)',
+      name: language === 'en' ? 'Leveraged products' : 'Leveraged produktai',
+      description: language === 'en' ? 'Leveraged investment products (e.g. TQQQ, UPRO)' : 'Finanisniais svertais pagrįsti investavimo produktai (pvz. TQQQ, UPRO)',
       returnRange: [25, 35] // Leveraged ETFs (3x)
     },
     moonshot: {
-      name: 'Moonshot aktyvai',
-      description: 'Itin spekuliatyvūs aktyvai (penny stocks, meme coins, SPAC)',
+      name: language === 'en' ? 'Moonshot assets' : 'Moonshot aktyvai',
+      description: language === 'en' ? 'Highly speculative assets (penny stocks, meme coins, SPAC)' : 'Itin spekuliatyvūs aktyvai (penny stocks, meme coins, SPAC)',
       returnRange: [-50, 100] // Extreme moonshot range
     }
   };
@@ -73,14 +73,14 @@ export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocatio
   // Portfolio konfigūracijos pagal rizikos lygį
   const portfolioConfigs = [
     {
-      riskLevel: 'Minimali rizika',
+      riskLevel: language === 'en' ? 'Minimal risk' : 'Minimali rizika',
       instruments: [
         { ...baseInstruments.etf, percentage: 100 }
       ],
       warning: undefined
     },
     {
-      riskLevel: 'Maža rizika',
+      riskLevel: language === 'en' ? 'Low risk' : 'Maža rizika',
       instruments: [
         { ...baseInstruments.etf, percentage: 50 },
         { ...baseInstruments.growthStock, percentage: 50 }
@@ -88,90 +88,90 @@ export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocatio
       warning: undefined
     },
     {
-      riskLevel: 'Vidutinė rizika',
+      riskLevel: language === 'en' ? 'Medium risk' : 'Vidutinė rizika',
       instruments: [
         { ...baseInstruments.growthStock, percentage: 50 },
         { ...baseInstruments.etf, percentage: 30 },
         { ...baseInstruments.cryptoETF, percentage: 10 },
         { ...baseInstruments.gold, percentage: 10 }
       ],
-      warning: 'Vidutinė rizika gali būti per didelė pradedantiesiems investuotojams.'
+      warning: language === 'en' ? 'Medium risk may be too high for beginner investors.' : 'Vidutinė rizika gali būti per didelė pradedantiesiems investuotojams.'
     },
     {
-      riskLevel: 'Didesnė rizika',
+      riskLevel: language === 'en' ? 'Higher risk' : 'Didesnė rizika',
       instruments: [
         { ...baseInstruments.growthStock, percentage: 50 },
         { ...baseInstruments.options, percentage: 20 },
         { ...baseInstruments.leveraged, percentage: 20 },
         { ...baseInstruments.crypto, percentage: 10 }
       ],
-      warning: 'Šis portfolio nėra rekomenduojamas pradedantiesiems investuotojams dėl padidėjusios rizikos.'
+      warning: language === 'en' ? 'This portfolio is not recommended for beginner investors due to increased risk.' : 'Šis portfolio nėra rekomenduojamas pradedantiesiems investuotojams dėl padidėjusios rizikos.'
     },
     {
-      riskLevel: 'Didelė rizika',
+      riskLevel: language === 'en' ? 'High risk' : 'Didelė rizika',
       instruments: [
         { ...baseInstruments.growthStock, percentage: 30 },
         { ...baseInstruments.crypto, percentage: 30 },
         { ...baseInstruments.leveraged, percentage: 30 },
         { ...baseInstruments.options, percentage: 10 }
       ],
-      warning: 'DIDELĖ RIZIKA: Šis portfolio yra labai spekuliatyvus ir gali sukelti didelius nuostolius. Rekomenduojamas tik patyrusiems investuotojams.'
+      warning: language === 'en' ? 'HIGH RISK: This portfolio is very speculative and can cause large losses. Recommended only for experienced investors.' : 'DIDELĖ RIZIKA: Šis portfolio yra labai spekuliatyvus ir gali sukelti didelius nuostolius. Rekomenduojamas tik patyrusiems investuotojams.'
     },
     {
-      riskLevel: 'Ultra rizika',
+      riskLevel: language === 'en' ? 'Ultra risk' : 'Ultra rizika',
       instruments: [
         { ...baseInstruments.crypto, percentage: 30 },
         { ...baseInstruments.options, percentage: 30 },
         { ...baseInstruments.leveraged, percentage: 30 },
         { ...baseInstruments.moonshot, percentage: 10 }
       ],
-      warning: 'EKSTREMALI RIZIKA: Šis portfolio gali sukelti visiško kapitalo praradimą. Investuokite tik tuos pinigus, kuriuos galite prarasti.'
+      warning: language === 'en' ? 'EXTREME RISK: This portfolio can cause total capital loss. Only invest money you can afford to lose.' : 'EKSTREMALI RIZIKA: Šis portfolio gali sukelti visiško kapitalo praradimą. Investuokite tik tuos pinigus, kuriuos galite prarasti.'
     }
   ];
 
   return portfolioConfigs[riskTolerance];
 }
 
-function getETFName(sector: string, geography: string): string {
+function getETFName(sector: string, geography: string, language: string = 'lt'): string {
   if (sector !== 'general') {
     const sectorNames: Record<string, string> = {
-      technology: 'Technologijų ETF (pvz. EQQQ, IITU)',
-      healthcare: 'Sveikatos sektorius ETF (pvz. HEAL, IEHS)',
-      energy: 'Energetikos ETF (pvz. INRG, IQQH)',
-      automotive: 'Automobilių ETF (pvz. ECAR, DRIV)',
-      realestate: 'Nekilnojamojo turto ETF (pvz. IPRP, EPRA)'
+      technology: language === 'en' ? 'Technology ETF (e.g. EQQQ, IITU)' : 'Technologijų ETF (pvz. EQQQ, IITU)',
+      healthcare: language === 'en' ? 'Healthcare ETF (e.g. HEAL, IEHS)' : 'Sveikatos sektorius ETF (pvz. HEAL, IEHS)',
+      energy: language === 'en' ? 'Energy ETF (e.g. INRG, IQQH)' : 'Energetikos ETF (pvz. INRG, IQQH)',
+      automotive: language === 'en' ? 'Automotive ETF (e.g. ECAR, DRIV)' : 'Automobilių ETF (pvz. ECAR, DRIV)',
+      realestate: language === 'en' ? 'Real Estate ETF (e.g. IPRP, EPRA)' : 'Nekilnojamojo turto ETF (pvz. IPRP, EPRA)'
     };
-    return sectorNames[sector] || 'VWCE ETF';
+    return sectorNames[sector] || (language === 'en' ? 'VWCE ETF' : 'VWCE ETF');
   }
 
   const geoNames: Record<string, string> = {
-    global: 'Globalūs ETF (VWCE, IWDA, SWDA)',
-    europe: 'Europos rinkų ETF (IEUS, VMEU, CSSPX)',
-    emerging: 'Besivystančių rinkų ETF (EIMI, IEMM, VFEM)'
+    global: language === 'en' ? 'Global ETF (VWCE, IWDA, SWDA)' : 'Globalūs ETF (VWCE, IWDA, SWDA)',
+    europe: language === 'en' ? 'European markets ETF (IEUS, VMEU, CSSPX)' : 'Europos rinkų ETF (IEUS, VMEU, CSSPX)',
+    emerging: language === 'en' ? 'Emerging markets ETF (EIMI, IEMM, VFEM)' : 'Besivystančių rinkų ETF (EIMI, IEMM, VFEM)'
   };
 
-  return geoNames[geography] || 'VWCE ETF';
+  return geoNames[geography] || (language === 'en' ? 'VWCE ETF' : 'VWCE ETF');
 }
 
-function getETFDescription(sector: string, geography: string): string {
+function getETFDescription(sector: string, geography: string, language: string = 'lt'): string {
   if (sector !== 'general') {
     const sectorDescriptions: Record<string, string> = {
-      technology: 'Technologijų sektorius ETF (18.3% - 18.8% vidutinis metinis grąža)',
-      healthcare: 'Sveikatos sektorius ir biotechnologijų ETF (8.5% - 10.2% vidutinis metinis grąža)',
-      energy: 'Energetikos ETF (2.1% - 4.8% vidutinis metinis grąža)',
-      automotive: 'Automobilių pramonės ETF (moderatus augimas)',
-      realestate: 'Nekilnojamojo turto investicinių fondų (REIT) ETF (7.2% - 8.8% vidutinis metinis grąža)'
+      technology: language === 'en' ? 'Technology sector ETF (18.3% - 18.8% average annual return)' : 'Technologijų sektorius ETF (18.3% - 18.8% vidutinis metinis grąža)',
+      healthcare: language === 'en' ? 'Healthcare and biotech ETF (8.5% - 10.2% average annual return)' : 'Sveikatos sektorius ir biotechnologijų ETF (8.5% - 10.2% vidutinis metinis grąža)',
+      energy: language === 'en' ? 'Energy sector ETF (2.1% - 4.8% average annual return)' : 'Energetikos ETF (2.1% - 4.8% vidutinis metinis grąža)',
+      automotive: language === 'en' ? 'Automotive industry ETF (moderate growth)' : 'Automobilių pramonės ETF (moderatus augimas)',
+      realestate: language === 'en' ? 'Real Estate Investment Trust (REIT) ETF (7.2% - 8.8% average annual return)' : 'Nekilnojamojo turto investicinių fondų (REIT) ETF (7.2% - 8.8% vidutinis metinis grąža)'
     };
-    return sectorDescriptions[sector] || 'Plačiai diversifikuotas ETF fondas';
+    return sectorDescriptions[sector] || (language === 'en' ? 'Broadly diversified ETF fund' : 'Plačiai diversifikuotas ETF fondas');
   }
 
   const geoDescriptions: Record<string, string> = {
-    global: 'Globalūs rinkų indeksas (12.8% - 13.2% vidutinis metinis grąža)',
-    europe: 'Europos šalių akcijų indeksas (6.8% - 8.2% vidutinis metinis grąža)',
-    emerging: 'Besivystančių šalių akcijų indeksas (4.2% - 6.1% vidutinis metinis grąža)'
+    global: language === 'en' ? 'Global market index (12.8% - 13.2% average annual return)' : 'Globalūs rinkų indeksas (12.8% - 13.2% vidutinis metinis grąža)',
+    europe: language === 'en' ? 'European countries stock index (6.8% - 8.2% average annual return)' : 'Europos šalių akcijų indeksas (6.8% - 8.2% vidutinis metinis grąža)',
+    emerging: language === 'en' ? 'Emerging countries stock index (4.2% - 6.1% average annual return)' : 'Besivystančių šalių akcijų indeksas (4.2% - 6.1% vidutinis metinis grąža)'
   };
 
-  return geoDescriptions[geography] || 'Plačiai diversifikuotas ETF fondas';
+  return geoDescriptions[geography] || (language === 'en' ? 'Broadly diversified ETF fund' : 'Plačiai diversifikuotas ETF fondas');
 }
 
 function getETFReturnRange(sector: string, geography: string): [number, number] {
@@ -198,7 +198,7 @@ function getETFReturnRange(sector: string, geography: string): [number, number] 
 // Calculate crash loss based on asset volatility
 function calculateCrashLoss(instrumentName: string): number {
   // Gold spikes during crashes, so return positive value
-  if (instrumentName.includes('Auksas') || instrumentName.includes('Auksas')) {
+  if (instrumentName.includes('Auksas') || instrumentName.includes('Gold')) {
     return -(15 + Math.random() * 10); // -15% to -25% (negative because gold goes up)
   }
   
@@ -209,22 +209,33 @@ function calculateCrashLoss(instrumentName: string): number {
     
     // Moderate volatility (broad market ETFs)
     'Augimo akcijos': [20, 30],
+    'Growth stocks': [20, 30],
     
     // High volatility (sector/regional ETFs)
     'Technologijų ETF': [25, 35],
+    'Technology ETF': [25, 35],
     'Sveikatos sektorius ETF': [25, 35],
+    'Healthcare ETF': [25, 35],
     'Energetikos ETF': [25, 35],
+    'Energy ETF': [25, 35],
     'Europos rinkų ETF': [25, 35],
+    'European markets ETF': [25, 35],
     'Besivystančių rinkų ETF': [30, 40],
+    'Emerging markets ETF': [30, 40],
     
     // Very high volatility (individual stocks, leveraged)
     'Kriptovaliutų ETF': [35, 45],
+    'Crypto ETF': [35, 45],
     'Leveraged produktai': [40, 45],
+    'Leveraged products': [40, 45],
     'Opcionai': [40, 45],
+    'Options': [40, 45],
     
     // Extreme volatility (crypto, moonshots)
     'Kriptovaliutos': [40, 45],
-    'Moonshot aktyvai': [40, 45]
+    'Cryptocurrencies': [40, 45],
+    'Moonshot aktyvai': [40, 45],
+    'Moonshot assets': [40, 45]
   };
   
   // Find matching instrument type
@@ -241,7 +252,7 @@ function calculateCrashLoss(instrumentName: string): number {
 // Calculate correction loss (smaller than crash) based on asset volatility
 function calculateCorrectionLoss(instrumentName: string): number {
   // Gold spikes during corrections too
-  if (instrumentName.includes('Auksas') || instrumentName.includes('Auksas')) {
+  if (instrumentName.includes('Auksas') || instrumentName.includes('Gold')) {
     return -(5 + Math.random() * 5); // -5% to -10% (negative because gold goes up)
   }
   
@@ -252,22 +263,33 @@ function calculateCorrectionLoss(instrumentName: string): number {
     
     // Moderate volatility
     'Augimo akcijos': [10, 15],
+    'Growth stocks': [10, 15],
     
     // High volatility
     'Technologijų ETF': [12, 18],
+    'Technology ETF': [12, 18],
     'Sveikatos sektorius ETF': [12, 18],
+    'Healthcare ETF': [12, 18],
     'Energetikos ETF': [12, 18],
+    'Energy ETF': [12, 18],
     'Europos rinkų ETF': [12, 18],
+    'European markets ETF': [12, 18],
     'Besivystančių rinkų ETF': [15, 20],
+    'Emerging markets ETF': [15, 20],
     
     // Very high volatility
     'Kriptovaliutų ETF': [18, 25],
+    'Crypto ETF': [18, 25],
     'Leveraged produktai': [20, 30],
+    'Leveraged products': [20, 30],
     'Opcionai': [20, 30],
+    'Options': [20, 30],
     
     // Extreme volatility
     'Kriptovaliutos': [20, 30],
-    'Moonshot aktyvai': [20, 30]
+    'Cryptocurrencies': [20, 30],
+    'Moonshot aktyvai': [20, 30],
+    'Moonshot assets': [20, 30]
   };
   
   // Find matching instrument type
@@ -294,11 +316,11 @@ export function generateRandomReturn(baseRange: [number, number], volatilityFact
 }
 
 // Calculate detailed projections with yearly breakdown including crash and correction scenarios
-export function calculateDetailedProjections(inputs: InvestmentInputs, period: number): { 
+export function calculateDetailedProjections(inputs: InvestmentInputs, period: number, language: string = 'lt'): { 
   projectionData: Array<{ year: number; value: number; invested: number; bestCase: number; worstCase: number; volatileValue: number; }>;
   yearlyCalculations: YearlyCalculation[];
 } {
-  const portfolio = calculatePortfolio(inputs);
+  const portfolio = calculatePortfolio(inputs, language);
   const yearlyCalculations: YearlyCalculation[] = [];
   const projectionData = [];
   
