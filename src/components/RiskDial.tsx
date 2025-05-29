@@ -29,7 +29,7 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
     if (age < 30) {
       if (isMarriedWithKids) {
         maxAcceptableRisk = 4; // Up to Didelė
-        maxRiskyLevel = 4;
+        maxRiskyLevel = 5; // Ultra is risky
       } else {
         maxAcceptableRisk = 5; // All levels acceptable
         maxRiskyLevel = 5;
@@ -40,7 +40,7 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
         maxRiskyLevel = 5;
       } else if (isMarriedNoKids) {
         maxAcceptableRisk = 4; // Up to Didelė
-        maxRiskyLevel = 4;
+        maxRiskyLevel = 5; // Ultra is risky
       } else if (isMarriedWithKids) {
         maxAcceptableRisk = 2; // Up to Vidutinė
         maxRiskyLevel = 3; // Didesnė is risky
@@ -48,7 +48,7 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
     } else if (age >= 40 && age < 50) {
       if (isSingle) {
         maxAcceptableRisk = 4; // Up to Didelė
-        maxRiskyLevel = 4;
+        maxRiskyLevel = 5; // Ultra is risky
       } else if (isMarriedNoKids) {
         maxAcceptableRisk = 2; // Up to Vidutinė
         maxRiskyLevel = 3; // Didesnė is risky
