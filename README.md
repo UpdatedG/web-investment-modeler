@@ -28,7 +28,7 @@ This investment calculator provides:
 ## How Calculations Are Made
 
 ### Portfolio Allocation
-The calculator uses a sophisticated algorithm that considers:
+The calculator uses a semi-sophisticated algorithm that considers:
 - **Age factor**: Younger investors get higher stock allocation
 - **Risk tolerance**: User's comfort level with market volatility
 - **Time horizon**: Longer periods allow for more aggressive strategies
@@ -38,7 +38,7 @@ The calculator uses a sophisticated algorithm that considers:
 Calculations are based on:
 - **Historical Returns**: Uses real market data averages for different asset classes
 - **Compound Interest**: Applies monthly contributions with compound growth
-- **Volatility Modeling**: Incorporates realistic market fluctuations
+- **Volatility Modeling**: Incorporates realistic-ish market fluctuations
 - **Multiple Scenarios**: 
   - **Optimistic**: Above-average market performance
   - **Expected**: Historical average returns
@@ -46,12 +46,20 @@ Calculations are based on:
   - **Volatile**: Realistic year-to-year fluctuations
 
 ### Accuracy
-- **Approximate accuracy**: ±15-25% over 10+ year periods
+- **Approximate accuracy**: ±15-25% over 10+ year periods. The for higher risk asset classes that include options and crypto ETF accuracy is "ballpark" due to lack of historical data and testing
 - **Based on**: Historical market data from major European and global indices
 - **Limitations**: Past performance does not guarantee future results
 - **Volatility**: Real markets experience significant short-term fluctuations
 
-The calculator is designed for educational and planning purposes. Always consult with qualified financial advisors for personalized investment advice.
+The calculator is designed for educational and planning purposes, mostly visualisation. Always consult with qualified financial advisors for personalized investment advice.
+
+### WARNING
+- **This is mostly vibecoded stuff dont hate me for it**
+
+### Known issues
+- **Low accuracy for highest-risk assets**
+- **Region specific and sector specific ETF's has not been troughly tested**
+
 
 ## Technology Stack
 
