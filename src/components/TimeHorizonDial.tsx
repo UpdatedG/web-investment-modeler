@@ -14,14 +14,15 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
   const minYears = 1;
   const maxYears = 50;
   
-  // Calculate angle based on years (180° range, starting from -90° to 90°)
+  // Calculate angle based on years (270° range, starting from -135° to 135°)
   const getAngleFromYears = (years: number) => {
     const normalizedYears = Math.max(0, Math.min(1, (years - minYears) / (maxYears - minYears)));
-    return normalizedYears * 180 - 90; // -90° to 90°
+    return normalizedYears * 270 - 135; // -135° to 135°
   };
   
   const getYearsFromAngle = (angle: number) => {
-    const normalizedAngle = Math.max(0, Math.min(1, (angle + 90) / 180));
+    // Normalize angle to 0-270 range
+    const normalizedAngle = Math.max(0, Math.min(270, angle + 135)) / 270;
     return Math.round(minYears + normalizedAngle * (maxYears - minYears));
   };
   
@@ -41,15 +42,15 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
     const deltaX = clientX - centerX;
     const deltaY = clientY - centerY;
     
-    // Calculate angle in degrees
+    // Calculate angle in degrees (-180 to 180)
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
-    // Normalize to our range (-90° to 90°)
-    if (angle > 90) angle = 90;
-    if (angle < -90) angle = -90;
+    // Convert to our dial range (-135° to 135°)
+    if (angle < -135) angle = -135;
+    if (angle > 135) angle = 135;
     
     const newYears = getYearsFromAngle(angle);
-    if (newYears !== value) {
+    if (newYears !== value && newYears >= minYears && newYears <= maxYears) {
       onChange(newYears);
     }
   };
@@ -97,9 +98,9 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
           {/* Arc background */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 120 120">
             <path
-              d="M 20 60 A 40 40 0 0 1 100 60"
+              d="M 15 75 A 45 45 0 1 1 105 75"
               stroke="#e5e7eb"
-              strokeWidth="3"
+              strokeWidth="2"
               fill="none"
             />
           </svg>
@@ -107,13 +108,12 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
           {/* Year markers */}
           {[5, 10, 20, 30, 40].map((years) => {
             const markerAngle = getAngleFromYears(years);
-            const isQuarter = years === 20;
             return (
               <div
                 key={years}
                 className="absolute w-0.5 bg-orange-300 origin-bottom"
                 style={{
-                  height: isQuarter ? '20px' : '15px',
+                  height: '12px',
                   left: '50%',
                   bottom: '50%',
                   transform: `translateX(-50%) rotate(${markerAngle}deg)`,
@@ -126,7 +126,7 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
           {[5, 10, 20, 30, 40].map((years) => {
             const markerAngle = getAngleFromYears(years);
             const radian = (markerAngle * Math.PI) / 180;
-            const radius = 45;
+            const radius = 35;
             const x = Math.cos(radian) * radius;
             const y = Math.sin(radian) * radius;
             
@@ -135,7 +135,7 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
                 key={`label-${years}`}
                 className="absolute text-xs font-bold text-orange-600"
                 style={{
-                  left: `calc(50% + ${x}px - 8px)`,
+                  left: `calc(50% + ${x}px - 6px)`,
                   top: `calc(50% + ${y}px - 6px)`,
                 }}
               >
@@ -145,14 +145,14 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
           })}
           
           {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-orange-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
+          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-orange-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"></div>
           
           {/* Dial pointer with arrow */}
           <div
-            className="absolute origin-bottom z-20 transition-transform duration-75"
+            className="absolute origin-bottom z-20 transition-transform duration-100"
             style={{
               width: '2px',
-              height: '45px',
+              height: '35px',
               left: '50%',
               bottom: '50%',
               transform: `translateX(-50%) rotate(${currentAngle}deg)`,
@@ -161,13 +161,13 @@ export const TimeHorizonDial: React.FC<TimeHorizonDialProps> = ({ value, onChang
           >
             {/* Arrow tip */}
             <div 
-              className="absolute -top-1.5 left-1/2 transform -translate-x-1/2"
+              className="absolute -top-1 left-1/2 transform -translate-x-1/2"
               style={{
                 width: '0',
                 height: '0',
-                borderLeft: '4px solid transparent',
-                borderRight: '4px solid transparent',
-                borderBottom: '8px solid #ea580c',
+                borderLeft: '3px solid transparent',
+                borderRight: '3px solid transparent',
+                borderBottom: '6px solid #ea580c',
               }}
             />
           </div>

@@ -14,14 +14,15 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
   const minAge = 18;
   const maxAge = 80;
   
-  // Calculate angle based on age (180° range, starting from -90° to 90°)
+  // Calculate angle based on age (270° range, starting from -135° to 135°)
   const getAngleFromAge = (age: number) => {
     const normalizedAge = Math.max(0, Math.min(1, (age - minAge) / (maxAge - minAge)));
-    return normalizedAge * 180 - 90; // -90° to 90°
+    return normalizedAge * 270 - 135; // -135° to 135°
   };
   
   const getAgeFromAngle = (angle: number) => {
-    const normalizedAngle = Math.max(0, Math.min(1, (angle + 90) / 180));
+    // Normalize angle to 0-270 range
+    const normalizedAngle = Math.max(0, Math.min(270, angle + 135)) / 270;
     return Math.round(minAge + normalizedAngle * (maxAge - minAge));
   };
   
@@ -41,15 +42,15 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
     const deltaX = clientX - centerX;
     const deltaY = clientY - centerY;
     
-    // Calculate angle in degrees
+    // Calculate angle in degrees (-180 to 180)
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
-    // Normalize to our range (-90° to 90°)
-    if (angle > 90) angle = 90;
-    if (angle < -90) angle = -90;
+    // Convert to our dial range (-135° to 135°)
+    if (angle < -135) angle = -135;
+    if (angle > 135) angle = 135;
     
     const newAge = getAgeFromAngle(angle);
-    if (newAge !== value) {
+    if (newAge !== value && newAge >= minAge && newAge <= maxAge) {
       onChange(newAge);
     }
   };
@@ -97,9 +98,9 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           {/* Arc background */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 120 120">
             <path
-              d="M 20 60 A 40 40 0 0 1 100 60"
+              d="M 15 75 A 45 45 0 1 1 105 75"
               stroke="#e5e7eb"
-              strokeWidth="3"
+              strokeWidth="2"
               fill="none"
             />
           </svg>
@@ -107,13 +108,12 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           {/* Age markers */}
           {[20, 30, 40, 50, 60, 70].map((age) => {
             const markerAngle = getAngleFromAge(age);
-            const isQuarter = age % 20 === 0;
             return (
               <div
                 key={age}
                 className="absolute w-0.5 bg-blue-300 origin-bottom"
                 style={{
-                  height: isQuarter ? '20px' : '15px',
+                  height: '12px',
                   left: '50%',
                   bottom: '50%',
                   transform: `translateX(-50%) rotate(${markerAngle}deg)`,
@@ -126,7 +126,7 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           {[20, 30, 40, 50, 60, 70].map((age) => {
             const markerAngle = getAngleFromAge(age);
             const radian = (markerAngle * Math.PI) / 180;
-            const radius = 45;
+            const radius = 35;
             const x = Math.cos(radian) * radius;
             const y = Math.sin(radian) * radius;
             
@@ -135,7 +135,7 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
                 key={`label-${age}`}
                 className="absolute text-xs font-bold text-blue-600"
                 style={{
-                  left: `calc(50% + ${x}px - 8px)`,
+                  left: `calc(50% + ${x}px - 6px)`,
                   top: `calc(50% + ${y}px - 6px)`,
                 }}
               >
@@ -145,14 +145,14 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           })}
           
           {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-blue-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
+          <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-blue-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10"></div>
           
           {/* Dial pointer with arrow */}
           <div
-            className="absolute origin-bottom z-20 transition-transform duration-75"
+            className="absolute origin-bottom z-20 transition-transform duration-100"
             style={{
               width: '2px',
-              height: '45px',
+              height: '35px',
               left: '50%',
               bottom: '50%',
               transform: `translateX(-50%) rotate(${currentAngle}deg)`,
@@ -161,13 +161,13 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           >
             {/* Arrow tip */}
             <div 
-              className="absolute -top-1.5 left-1/2 transform -translate-x-1/2"
+              className="absolute -top-1 left-1/2 transform -translate-x-1/2"
               style={{
                 width: '0',
                 height: '0',
-                borderLeft: '4px solid transparent',
-                borderRight: '4px solid transparent',
-                borderBottom: '8px solid #2563eb',
+                borderLeft: '3px solid transparent',
+                borderRight: '3px solid transparent',
+                borderBottom: '6px solid #2563eb',
               }}
             />
           </div>
