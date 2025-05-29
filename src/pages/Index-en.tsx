@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
-import { InvestmentForm } from '@/components/InvestmentForm';
+import { InvestmentFormEn } from '@/components/InvestmentForm-en';
 import { PortfolioResults } from '@/components/PortfolioResults';
-import { Header } from '@/components/Header';
-import { Disclaimer } from '@/components/Disclaimer';
-import IndexEn from '@/pages/Index-en';
+import { HeaderEn } from '@/components/Header-en';
+import { DisclaimerEn } from '@/components/Disclaimer-en';
 
 export interface InvestmentInputs {
   age: number;
@@ -28,10 +27,13 @@ export interface PortfolioAllocation {
   warning?: string;
 }
 
-const Index = () => {
+interface IndexEnProps {
+  onLanguageChange: () => void;
+}
+
+const IndexEn: React.FC<IndexEnProps> = ({ onLanguageChange }) => {
   const [inputs, setInputs] = useState<InvestmentInputs | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [isEnglish, setIsEnglish] = useState(false);
 
   const handleFormSubmit = (data: InvestmentInputs) => {
     setInputs(data);
@@ -43,33 +45,28 @@ const Index = () => {
     setShowResults(false);
   };
 
-  const handleLanguageChange = () => {
-    setIsEnglish(!isEnglish);
-    // Reset form when changing language
-    setInputs(null);
-    setShowResults(false);
-  };
-
-  if (isEnglish) {
-    return <IndexEn onLanguageChange={handleLanguageChange} />;
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <Header onLanguageChange={handleLanguageChange} />
+      <HeaderEn onLanguageChange={onLanguageChange} />
       
       <main className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Investavimo scenarijų generatorius</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">Sužinokite, kokio vidutinio rezultato galite tikėtis pasirinkę konkretų rizikos modelį ir iš to sekančius instrumentus (instrumentai iliustratyvūs)</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Investment Scenario Generator</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Find out what average results you can expect by choosing a specific risk model and the resulting instruments (instruments are illustrative)
+          </p>
         </div>
 
-        {!showResults ? <InvestmentForm onSubmit={handleFormSubmit} /> : <PortfolioResults inputs={inputs!} onReset={handleReset} />}
+        {!showResults ? (
+          <InvestmentFormEn onSubmit={handleFormSubmit} />
+        ) : (
+          <PortfolioResults inputs={inputs!} onReset={handleReset} />
+        )}
         
-        <Disclaimer />
+        <DisclaimerEn />
       </main>
     </div>
   );
 };
 
-export default Index;
+export default IndexEn;

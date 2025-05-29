@@ -3,11 +3,11 @@ import React from 'react';
 import { TrendingUp, Calculator, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-interface HeaderProps {
+interface HeaderEnProps {
   onLanguageChange: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onLanguageChange }) => {
+export const HeaderEn: React.FC<HeaderEnProps> = ({ onLanguageChange }) => {
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-6">
@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ onLanguageChange }) => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">r/6nuliai</h1>
-              <p className="text-sm text-gray-600">Investavimo skaičiuoklė</p>
+              <p className="text-sm text-gray-600">Investment Calculator</p>
             </div>
           </div>
           
@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({ onLanguageChange }) => {
               className="flex items-center space-x-2"
             >
               <Globe className="h-4 w-4" />
-              <span>English</span>
+              <span>Lietuviškai</span>
             </Button>
             <div className="flex items-center space-x-2 text-green-600">
               <TrendingUp className="h-5 w-5" />
