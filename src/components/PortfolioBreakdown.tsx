@@ -16,13 +16,15 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
     fill: colors[index % colors.length]
   }));
 
-  // Function to format instrument names with line breaks after tickers
+  // Function to format instrument names with line breaks after each ticker
   const formatInstrumentName = (name: string) => {
-    // Look for pattern like "ETF_NAME (TICKER)" and add line break after ticker
+    // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
     const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
     if (tickerMatch) {
-      const [, etfName, ticker, rest] = tickerMatch;
-      return `${etfName} (${ticker})\n${rest}`.trim();
+      const [, etfName, tickers, rest] = tickerMatch;
+      // Split tickers by comma and add line breaks after each
+      const formattedTickers = tickers.split(',').map(ticker => ticker.trim()).join(',\n');
+      return `${etfName} (${formattedTickers})\n${rest}`.trim();
     }
     return name;
   };
