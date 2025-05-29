@@ -49,7 +49,7 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
           <Button
             variant="outline"
             onClick={onToggleDebugTable}
-            className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 hover:from-blue-600 hover:to-purple-700 animate-pulse hover:animate-none transition-all duration-300 shadow-lg hover:shadow-xl"
+            className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 hover:from-blue-600 hover:to-purple-700 animate-pulse hover:animate-none transition-all duration-3000 shadow-lg hover:shadow-xl"
           >
             <Calculator className="h-4 w-4" />
             <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>
@@ -71,11 +71,11 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
             <Tooltip 
               formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
-                  'value': 'Projektyta vertė',
+                  'value': 'Portfelio vertė (projekcija)',
                   'invested': 'Investuota suma',
                   'bestCase': 'Optimistinis scenarijus',
                   'worstCase': 'Pesimistinis scenarijus',
-                  'volatileValue': 'Vertė su volatilumu'
+                  'volatileValue': 'Protfelio volatyvumas'
                 };
                 return [formatCurrency(value), labels[name] || name];
               }}
