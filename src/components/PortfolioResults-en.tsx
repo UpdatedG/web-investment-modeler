@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { PortfolioChart } from '@/components/PortfolioChart';
-import { PortfolioBreakdown } from '@/components/PortfolioBreakdown';
+import { PortfolioChartEn } from '@/components/PortfolioChart-en';
+import { PortfolioBreakdownEn } from '@/components/PortfolioBreakdown-en';
 import { CalculationsDebugTable } from '@/components/CalculationsDebugTable';
 import { calculatePortfolio, calculateDetailedProjections } from '@/utils/portfolioCalculator';
 import { AlertTriangle, ArrowLeft, TrendingUp, Calculator, MessageSquare } from 'lucide-react';
@@ -78,7 +78,7 @@ export const PortfolioResultsEn: React.FC<PortfolioResultsEnProps> = ({ inputs, 
       )}
 
       {/* Portfolio composition */}
-      <PortfolioBreakdown portfolio={portfolio} />
+      <PortfolioBreakdownEn portfolio={portfolio} />
 
       {/* Period selection */}
       <Card>
@@ -102,7 +102,7 @@ export const PortfolioResultsEn: React.FC<PortfolioResultsEnProps> = ({ inputs, 
       </Card>
 
       {/* Portfolio growth chart */}
-      <PortfolioChart 
+      <PortfolioChartEn 
         data={projectionData} 
         period={selectedPeriod}
         inputs={inputs}
