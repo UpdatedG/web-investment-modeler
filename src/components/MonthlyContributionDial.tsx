@@ -10,11 +10,38 @@ interface MonthlyContributionDialProps {
 
 export const MonthlyContributionDial: React.FC<MonthlyContributionDialProps> = ({ value, onChange }) => {
   const minContribution = 0;
-  const maxContribution = 2000;
-  const step = 25;
+  const maxContribution = 10000;
+  
+  // Convert exponential value to linear slider position (0-100)
+  const valueToSlider = (val: number): number => {
+    if (val === 0) return 0;
+    const logMin = Math.log(10); // Start from 10 for log calculation
+    const logMax = Math.log(maxContribution);
+    const logVal = Math.log(Math.max(val, 10));
+    return ((logVal - logMin) / (logMax - logMin)) * 100;
+  };
+
+  // Convert linear slider position to exponential value
+  const sliderToValue = (sliderPos: number): number => {
+    if (sliderPos === 0) return 0;
+    const logMin = Math.log(10);
+    const logMax = Math.log(maxContribution);
+    const logVal = logMin + (sliderPos / 100) * (logMax - logMin);
+    const result = Math.exp(logVal);
+    // Round to nearest 25
+    return Math.round(result / 25) * 25;
+  };
+
+  const currentSliderValue = valueToSlider(value);
 
   const handleSliderChange = (values: number[]) => {
-    onChange(values[0]);
+    const newValue = sliderToValue(values[0]);
+    onChange(newValue);
+  };
+
+  const formatContribution = (amount: number) => {
+    if (amount >= 1000) return `€${(amount/1000).toFixed(1)}k`;
+    return `€${amount}`;
   };
 
   return (
@@ -24,23 +51,23 @@ export const MonthlyContributionDial: React.FC<MonthlyContributionDialProps> = (
           <PiggyBank className="h-6 w-6 text-purple-600" />
         </div>
         <p className="text-lg font-semibold text-gray-800">Mėnesinis įnašas</p>
-        <p className="text-3xl font-bold text-purple-600">€{value}</p>
+        <p className="text-3xl font-bold text-purple-600">{formatContribution(value)}</p>
         <p className="text-sm text-gray-500">per mėnesį</p>
       </div>
       
       <div className="w-48 space-y-4">
         <EnhancedSlider
-          value={[value]}
+          value={[currentSliderValue]}
           onValueChange={handleSliderChange}
-          min={minContribution}
-          max={maxContribution}
-          step={step}
+          min={0}
+          max={100}
+          step={0.1}
           colorScheme="purple"
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">
-          <span>€{minContribution}</span>
-          <span>€{maxContribution}</span>
+          <span>{formatContribution(minContribution)}</span>
+          <span>{formatContribution(maxContribution)}</span>
         </div>
       </div>
     </div>

@@ -9,32 +9,27 @@ interface InitialSumDialProps {
 }
 
 export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange }) => {
-  // Smart scaling system: exponential growth for larger amounts
   const minSum = 500;
-  const maxSliderValue = 100;
+  const maxSum = 1000000;
   
-  // Convert actual value to slider position (0-100)
-  const valueToSlider = (actualValue: number): number => {
-    if (actualValue <= 10000) {
-      // Linear scaling for first 10k (0-50 on slider)
-      return (actualValue - minSum) / (10000 - minSum) * 50;
-    } else {
-      // Exponential scaling for 10k-1M (50-100 on slider)
-      const logValue = Math.log(actualValue - 9500) / Math.log(990500) * 50 + 50;
-      return Math.min(100, logValue);
-    }
+  // Convert exponential value to linear slider position (0-100)
+  const valueToSlider = (val: number): number => {
+    const logMin = Math.log(minSum);
+    const logMax = Math.log(maxSum);
+    const logVal = Math.log(val);
+    return ((logVal - logMin) / (logMax - logMin)) * 100;
   };
 
-  // Convert slider position to actual value
+  // Convert linear slider position to exponential value
   const sliderToValue = (sliderPos: number): number => {
-    if (sliderPos <= 50) {
-      // Linear scaling for first half (500-10k)
-      return minSum + (sliderPos / 50) * (10000 - minSum);
-    } else {
-      // Exponential scaling for second half (10k-1M)
-      const expValue = Math.pow(990500, (sliderPos - 50) / 50) + 9500;
-      return Math.round(expValue / 500) * 500; // Round to nearest 500
-    }
+    const logMin = Math.log(minSum);
+    const logMax = Math.log(maxSum);
+    const logVal = logMin + (sliderPos / 100) * (logMax - logMin);
+    const result = Math.exp(logVal);
+    // Round to nearest sensible increment
+    if (result < 5000) return Math.round(result / 100) * 100;
+    if (result < 50000) return Math.round(result / 500) * 500;
+    return Math.round(result / 5000) * 5000;
   };
 
   const currentSliderValue = valueToSlider(value);
@@ -50,10 +45,6 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
     return `€${sum}`;
   };
 
-  const getMaxDisplayValue = () => {
-    return sliderToValue(100);
-  };
-
   return (
     <div className="flex flex-col items-center space-y-6">
       <div className="text-center">
@@ -62,7 +53,7 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
         </div>
         <p className="text-lg font-semibold text-gray-800">Pradinė suma</p>
         <p className="text-3xl font-bold text-green-600">{formatSum(value)}</p>
-        <p className="text-sm text-gray-500">{formatSum(minSum)} - {formatSum(getMaxDisplayValue())}</p>
+        <p className="text-sm text-gray-500">pradinė investicija</p>
       </div>
       
       <div className="w-48 space-y-4">
@@ -70,17 +61,14 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
           value={[currentSliderValue]}
           onValueChange={handleSliderChange}
           min={0}
-          max={maxSliderValue}
+          max={100}
           step={0.1}
           colorScheme="green"
           className="w-full"
         />
         <div className="flex justify-between text-xs text-gray-500">
           <span>{formatSum(minSum)}</span>
-          <span>{formatSum(getMaxDisplayValue())}</span>
-        </div>
-        <div className="text-center text-xs text-gray-400">
-          Smart scaling: linear up to €10k, then exponential
+          <span>{formatSum(maxSum)}</span>
         </div>
       </div>
     </div>
