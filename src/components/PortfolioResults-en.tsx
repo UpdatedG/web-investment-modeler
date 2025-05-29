@@ -9,6 +9,7 @@ import { PortfolioBreakdownEn } from '@/components/PortfolioBreakdown-en';
 import { CalculationsDebugTable } from '@/components/CalculationsDebugTable';
 import { calculatePortfolio, calculateDetailedProjections } from '@/utils/portfolioCalculator';
 import { AlertTriangle, ArrowLeft, TrendingUp, Calculator, MessageSquare } from 'lucide-react';
+import { Github } from 'lucide-react';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioResultsEnProps {
@@ -35,6 +36,10 @@ export const PortfolioResultsEn: React.FC<PortfolioResultsEnProps> = ({ inputs, 
 
   const handleFeedback = () => {
     window.open('https://www.reddit.com/message/compose/?to=violt&subject=r/6nuliai%20calculator', '_blank');
+  };
+
+  const handleGithub = () => {
+    window.open('https://github.com/UpdatedG/web-investment-modeler', '_blank');
   };
 
   return (
@@ -154,14 +159,22 @@ export const PortfolioResultsEn: React.FC<PortfolioResultsEnProps> = ({ inputs, 
         <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
       )}
 
-      {/* Bottom feedback button */}
-      <div className="flex justify-center">
+      {/* Bottom buttons */}
+      <div className="flex justify-center space-x-4">
         <Button 
           onClick={handleFeedback}
           className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
         >
           <MessageSquare className="h-4 w-4" />
           <span>Leave Feedback</span>
+        </Button>
+        <Button 
+          onClick={handleGithub}
+          variant="outline"
+          className="flex items-center space-x-2"
+        >
+          <Github className="h-4 w-4" />
+          <span>View Source Code</span>
         </Button>
       </div>
     </div>
