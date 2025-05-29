@@ -14,41 +14,49 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
   const minAge = 18;
   const maxAge = 80;
   
-  // Calculate angle based on age (240° range, starting from -120° to 120°)
+  // Calculate angle based on age (180° range, starting from -90° to 90°)
   const getAngleFromAge = (age: number) => {
-    const normalizedAge = (age - minAge) / (maxAge - minAge);
-    return normalizedAge * 240 - 120; // -120° to 120°
+    const normalizedAge = Math.max(0, Math.min(1, (age - minAge) / (maxAge - minAge)));
+    return normalizedAge * 180 - 90; // -90° to 90°
   };
   
   const getAgeFromAngle = (angle: number) => {
-    // Normalize angle to 0-240 range
-    const normalizedAngle = (angle + 120) / 240;
-    const clampedAngle = Math.max(0, Math.min(1, normalizedAngle));
-    return Math.round(minAge + clampedAngle * (maxAge - minAge));
+    const normalizedAngle = Math.max(0, Math.min(1, (angle + 90) / 180));
+    return Math.round(minAge + normalizedAngle * (maxAge - minAge));
   };
   
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
+    updateValue(e.clientX, e.clientY);
   };
   
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !dialRef.current) return;
+  const updateValue = (clientX: number, clientY: number) => {
+    if (!dialRef.current) return;
     
     const rect = dialRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    const deltaX = e.clientX - centerX;
-    const deltaY = e.clientY - centerY;
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    
+    // Calculate angle in degrees
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
-    // Convert to our coordinate system and constrain
-    if (angle < -120) angle = -120;
-    if (angle > 120) angle = 120;
+    // Normalize to our range (-90° to 90°)
+    if (angle > 90) angle = 90;
+    if (angle < -90) angle = -90;
     
     const newAge = getAgeFromAngle(angle);
-    onChange(newAge);
+    if (newAge !== value) {
+      onChange(newAge);
+    }
+  };
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    updateValue(e.clientX, e.clientY);
   };
   
   const handleMouseUp = () => setIsDragging(false);
@@ -86,6 +94,16 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
         
         {/* Inner dial face */}
         <div className="absolute inset-6 rounded-full bg-white shadow-inner border border-gray-100">
+          {/* Arc background */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 120 120">
+            <path
+              d="M 20 60 A 40 40 0 0 1 100 60"
+              stroke="#e5e7eb"
+              strokeWidth="3"
+              fill="none"
+            />
+          </svg>
+          
           {/* Age markers */}
           {[20, 30, 40, 50, 60, 70].map((age) => {
             const markerAngle = getAngleFromAge(age);
@@ -104,11 +122,11 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
             );
           })}
           
-          {/* Age numbers */}
+          {/* Age numbers positioned around the arc */}
           {[20, 30, 40, 50, 60, 70].map((age) => {
             const markerAngle = getAngleFromAge(age);
             const radian = (markerAngle * Math.PI) / 180;
-            const radius = 55;
+            const radius = 45;
             const x = Math.cos(radian) * radius;
             const y = Math.sin(radian) * radius;
             
@@ -127,20 +145,31 @@ export const AgeDial: React.FC<AgeDialProps> = ({ value, onChange }) => {
           })}
           
           {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-blue-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
+          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-blue-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
           
           {/* Dial pointer with arrow */}
           <div
-            className="absolute w-1 bg-gradient-to-t from-blue-600 to-blue-500 origin-bottom rounded-full z-20 transition-transform duration-100"
+            className="absolute origin-bottom z-20 transition-transform duration-75"
             style={{
-              height: '50px',
+              width: '2px',
+              height: '45px',
               left: '50%',
               bottom: '50%',
               transform: `translateX(-50%) rotate(${currentAngle}deg)`,
+              background: 'linear-gradient(to top, #2563eb, #3b82f6)',
             }}
           >
             {/* Arrow tip */}
-            <div className="absolute -top-1 -left-2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-blue-600"></div>
+            <div 
+              className="absolute -top-1.5 left-1/2 transform -translate-x-1/2"
+              style={{
+                width: '0',
+                height: '0',
+                borderLeft: '4px solid transparent',
+                borderRight: '4px solid transparent',
+                borderBottom: '8px solid #2563eb',
+              }}
+            />
           </div>
         </div>
       </div>

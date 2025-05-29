@@ -22,41 +22,50 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
   
   const range = getDynamicRange(value);
   
-  // Calculate angle based on sum (240° range, starting from -120° to 120°)
+  // Calculate angle based on sum (180° range, starting from -90° to 90°)
   const getAngleFromSum = (sum: number) => {
-    const normalizedSum = (sum - range.min) / (range.max - range.min);
-    return normalizedSum * 240 - 120; // -120° to 120°
+    const normalizedSum = Math.max(0, Math.min(1, (sum - range.min) / (range.max - range.min)));
+    return normalizedSum * 180 - 90; // -90° to 90°
   };
   
   const getSumFromAngle = (angle: number) => {
-    const normalizedAngle = (angle + 120) / 240;
-    const clampedAngle = Math.max(0, Math.min(1, normalizedAngle));
-    const rawSum = range.min + clampedAngle * (range.max - range.min);
+    const normalizedAngle = Math.max(0, Math.min(1, (angle + 90) / 180));
+    const rawSum = range.min + normalizedAngle * (range.max - range.min);
     return Math.round(rawSum / range.step) * range.step;
   };
   
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
+    updateValue(e.clientX, e.clientY);
   };
   
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging || !dialRef.current) return;
+  const updateValue = (clientX: number, clientY: number) => {
+    if (!dialRef.current) return;
     
     const rect = dialRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
     
-    const deltaX = e.clientX - centerX;
-    const deltaY = e.clientY - centerY;
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    
+    // Calculate angle in degrees
     let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
     
-    // Convert to our coordinate system and constrain
-    if (angle < -120) angle = -120;
-    if (angle > 120) angle = 120;
+    // Normalize to our range (-90° to 90°)
+    if (angle > 90) angle = 90;
+    if (angle < -90) angle = -90;
     
     const newSum = getSumFromAngle(angle);
-    onChange(newSum);
+    if (newSum !== value) {
+      onChange(newSum);
+    }
+  };
+  
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    updateValue(e.clientX, e.clientY);
   };
   
   const handleMouseUp = () => setIsDragging(false);
@@ -78,8 +87,8 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
   // Generate marker values based on current range
   const getMarkers = () => {
     const markers = [];
-    const step = (range.max - range.min) / 5;
-    for (let i = 1; i <= 4; i++) {
+    const step = (range.max - range.min) / 4;
+    for (let i = 1; i <= 3; i++) {
       markers.push(Math.round((range.min + step * i) / range.step) * range.step);
     }
     return markers;
@@ -107,16 +116,25 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
         
         {/* Inner dial face */}
         <div className="absolute inset-6 rounded-full bg-white shadow-inner border border-gray-100">
+          {/* Arc background */}
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 120 120">
+            <path
+              d="M 20 60 A 40 40 0 0 1 100 60"
+              stroke="#e5e7eb"
+              strokeWidth="3"
+              fill="none"
+            />
+          </svg>
+          
           {/* Sum markers */}
           {markers.map((sum, index) => {
             const markerAngle = getAngleFromSum(sum);
-            const isQuarter = index === 1; // Middle marker
             return (
               <div
                 key={sum}
                 className="absolute w-0.5 bg-green-300 origin-bottom"
                 style={{
-                  height: isQuarter ? '20px' : '15px',
+                  height: '15px',
                   left: '50%',
                   bottom: '50%',
                   transform: `translateX(-50%) rotate(${markerAngle}deg)`,
@@ -125,11 +143,11 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
             );
           })}
           
-          {/* Sum numbers */}
+          {/* Sum numbers positioned around the arc */}
           {markers.map((sum) => {
             const markerAngle = getAngleFromSum(sum);
             const radian = (markerAngle * Math.PI) / 180;
-            const radius = 55;
+            const radius = 45;
             const x = Math.cos(radian) * radius;
             const y = Math.sin(radian) * radius;
             
@@ -153,20 +171,31 @@ export const InitialSumDial: React.FC<InitialSumDialProps> = ({ value, onChange 
           </div>
           
           {/* Center dot */}
-          <div className="absolute top-1/2 left-1/2 w-4 h-4 bg-green-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
+          <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-green-600 rounded-full transform -translate-x-1/2 -translate-y-1/2 z-10 shadow-md"></div>
           
           {/* Dial pointer with arrow */}
           <div
-            className="absolute w-1 bg-gradient-to-t from-green-600 to-green-500 origin-bottom rounded-full z-20 transition-transform duration-100"
+            className="absolute origin-bottom z-20 transition-transform duration-75"
             style={{
-              height: '50px',
+              width: '2px',
+              height: '45px',
               left: '50%',
               bottom: '50%',
               transform: `translateX(-50%) rotate(${currentAngle}deg)`,
+              background: 'linear-gradient(to top, #059669, #10b981)',
             }}
           >
             {/* Arrow tip */}
-            <div className="absolute -top-1 -left-2 w-0 h-0 border-l-[6px] border-r-[6px] border-b-[10px] border-l-transparent border-r-transparent border-b-green-600"></div>
+            <div 
+              className="absolute -top-1.5 left-1/2 transform -translate-x-1/2"
+              style={{
+                width: '0',
+                height: '0',
+                borderLeft: '4px solid transparent',
+                borderRight: '4px solid transparent',
+                borderBottom: '8px solid #059669',
+              }}
+            />
           </div>
         </div>
       </div>
