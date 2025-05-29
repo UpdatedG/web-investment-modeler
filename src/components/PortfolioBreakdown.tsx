@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -24,17 +23,9 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
     return name;
   };
 
-  // Function to format instrument names with line breaks after each ticker for the list
+  // Function to format instrument names for the list (keep original format)
   const formatInstrumentName = (name: string) => {
-    // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
-    const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
-    if (tickerMatch) {
-      const [, etfName, tickers, rest] = tickerMatch;
-      // Split tickers by comma and add line breaks after each
-      const formattedTickers = tickers.split(',').map(ticker => ticker.trim()).join(',\n');
-      return `${etfName} (${formattedTickers})\n${rest}`.trim();
-    }
-    return name;
+    return name; // Keep original format without line breaks for the list
   };
 
   const chartData = portfolio.instruments.map((instrument, index) => ({
@@ -43,6 +34,11 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
     // Format name for pie chart with line breaks after each ticker
     chartName: formatInstrumentNameForChart(instrument.name)
   }));
+
+  // Custom label function for pie chart
+  const renderCustomLabel = ({ chartName, percentage }: any) => {
+    return `${chartName}: ${percentage}%`;
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -60,13 +56,15 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
                 cy="50%"
                 outerRadius={100}
                 dataKey="percentage"
-                label={({ chartName, percentage }) => `${chartName}: ${percentage}%`}
+                label={renderCustomLabel}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.fill} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip 
+                formatter={(value, name, props) => [`${value}%`, props.payload.chartName]}
+              />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>
@@ -82,7 +80,7 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
             {portfolio.instruments.map((instrument, index) => (
               <div key={index} className="border-l-4 pl-4" style={{ borderColor: colors[index % colors.length] }}>
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-gray-900 whitespace-pre-line leading-tight">
+                  <h4 className="font-semibold text-gray-900 leading-tight">
                     {formatInstrumentName(instrument.name)}
                   </h4>
                   <span className="text-lg font-bold text-gray-700 ml-2 flex-shrink-0">{instrument.percentage}%</span>

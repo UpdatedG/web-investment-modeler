@@ -84,27 +84,30 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
     const recommendation = getRiskRecommendation(risk.level);
     const isSelected = value === risk.level;
 
-    let borderColor = 'border-gray-200';
-    let bgColor = 'bg-white';
-    let hoverBg = 'hover:border-gray-300 hover:shadow-sm';
+    console.log(`Risk level ${risk.level}, recommendation: ${recommendation}, age: ${age}, family: ${familySituation}`);
 
-    if (isSelected) {
-      borderColor = 'border-gray-400';
-      bgColor = risk.bg;
-    }
-
+    // Base styles
+    let classes = 'p-3 rounded-lg border-2 transition-all duration-200';
+    
     // Apply color coding based on recommendation
     if (recommendation === 'not-recommended') {
-      borderColor = isSelected ? 'border-red-500' : 'border-red-300';
-      bgColor = isSelected ? 'bg-red-100' : 'bg-red-50';
-      hoverBg = 'hover:border-red-400';
+      classes += isSelected 
+        ? ' border-red-500 bg-red-100' 
+        : ' border-red-300 bg-red-50 hover:border-red-400';
     } else if (recommendation === 'risky') {
-      borderColor = isSelected ? 'border-yellow-500' : 'border-yellow-300';
-      bgColor = isSelected ? 'bg-yellow-100' : 'bg-yellow-50';
-      hoverBg = 'hover:border-yellow-400';
+      classes += isSelected 
+        ? ' border-yellow-500 bg-yellow-100' 
+        : ' border-yellow-300 bg-yellow-50 hover:border-yellow-400';
+    } else {
+      // Acceptable risk - use normal colors
+      if (isSelected) {
+        classes += ` border-gray-400 ${risk.bg}`;
+      } else {
+        classes += ' border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm';
+      }
     }
 
-    return `p-3 rounded-lg border-2 transition-all duration-200 ${borderColor} ${bgColor} ${hoverBg}`;
+    return classes;
   };
 
   const getTooltipText = (riskLevel: number) => {
