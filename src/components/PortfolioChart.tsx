@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +27,14 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
   showDebugTable, 
   onToggleDebugTable 
 }) => {
-  const formatCurrency = (value: number) => `€${value.toLocaleString()}`;
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) {
+      return `€${(value / 1000000).toFixed(1)}M`;
+    } else if (value >= 1000) {
+      return `€${(value / 1000).toFixed(0)}k`;
+    }
+    return `€${value.toLocaleString()}`;
+  };
   
   return (
     <Card>
@@ -43,7 +49,7 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
           <Button
             variant="outline"
             onClick={onToggleDebugTable}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0 hover:from-blue-600 hover:to-purple-700 animate-pulse hover:animate-none transition-all duration-300 shadow-lg hover:shadow-xl"
           >
             <Calculator className="h-4 w-4" />
             <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>

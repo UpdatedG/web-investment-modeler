@@ -135,19 +135,19 @@ export function calculatePortfolio(inputs: InvestmentInputs): PortfolioAllocatio
 function getETFName(sector: string, geography: string): string {
   if (sector !== 'general') {
     const sectorNames: Record<string, string> = {
-      technology: 'Technologijų ETF (pvz. XLK, QQQ)',
-      healthcare: 'Sveikatos sektorius ETF (pvz. VHT, XLV)',
-      energy: 'Energetikos ETF (pvz. XLE)',
-      automotive: 'Automobilių ETF (pvz. CARZ, DRIV)',
-      realestate: 'Nekilnojamojo turto ETF (pvz. VNQ, XLRE)'
+      technology: 'Technologijų ETF (pvz. EQQQ, IITU)',
+      healthcare: 'Sveikatos sektorius ETF (pvz. HEAL, IEHS)',
+      energy: 'Energetikos ETF (pvz. INRG, IQQH)',
+      automotive: 'Automobilių ETF (pvz. ECAR, DRIV)',
+      realestate: 'Nekilnojamojo turto ETF (pvz. IPRP, EPRA)'
     };
     return sectorNames[sector] || 'VWCE ETF';
   }
 
   const geoNames: Record<string, string> = {
-    global: 'Globalūs ETF (SPY, VTI, VOO)',
-    europe: 'Europos rinkų ETF (EFA, VGK, IEFA)',
-    emerging: 'Besivystančių rinkų ETF (EEM, VWO)'
+    global: 'Globalūs ETF (VWCE, IWDA, SWDA)',
+    europe: 'Europos rinkų ETF (IEUS, VMEU, CSSPX)',
+    emerging: 'Besivystančių rinkų ETF (EIMI, IEMM, VFEM)'
   };
 
   return geoNames[geography] || 'VWCE ETF';
