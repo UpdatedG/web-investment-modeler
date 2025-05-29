@@ -151,10 +151,7 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
         onToggleDebugTable={() => setShowDebugTable(!showDebugTable)}
       />
 
-      {/* Debug lentelė */}
-      {showDebugTable && (
-        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
-      )}
+      
 
       {/* Prognozės santrauka */}
       <Card>
@@ -194,6 +191,10 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           </div>
         </CardContent>
       </Card>
+      {/* Debug lentelė */}
+      {showDebugTable && (
+        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
+      )}
     </div>
   );
 };
