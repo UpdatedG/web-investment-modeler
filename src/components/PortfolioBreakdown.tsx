@@ -11,13 +11,6 @@ interface PortfolioBreakdownProps {
 export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfolio }) => {
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
   
-  const chartData = portfolio.instruments.map((instrument, index) => ({
-    ...instrument,
-    fill: colors[index % colors.length],
-    // Format name for pie chart with line breaks after each ticker
-    chartName: formatInstrumentNameForChart(instrument.name)
-  }));
-
   // Function to format instrument names with line breaks after each ticker for pie chart
   const formatInstrumentNameForChart = (name: string) => {
     // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
@@ -43,6 +36,13 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
     }
     return name;
   };
+
+  const chartData = portfolio.instruments.map((instrument, index) => ({
+    ...instrument,
+    fill: colors[index % colors.length],
+    // Format name for pie chart with line breaks after each ticker
+    chartName: formatInstrumentNameForChart(instrument.name)
+  }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
