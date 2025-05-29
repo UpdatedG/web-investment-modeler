@@ -197,10 +197,14 @@ function getETFReturnRange(sector: string, geography: string): [number, number] 
 
 // Calculate crash loss based on asset volatility
 function calculateCrashLoss(instrumentName: string): number {
+  // Gold spikes during crashes, so return positive value
+  if (instrumentName.includes('Auksas') || instrumentName.includes('Auksas')) {
+    return -(15 + Math.random() * 10); // -15% to -25% (negative because gold goes up)
+  }
+  
   // Map instruments to volatility levels and crash loss ranges
   const crashLossMap: Record<string, [number, number]> = {
     // Low volatility assets (bonds, utilities equivalent)
-    'Auksas': [15, 20],
     'ETF': [15, 25],
     
     // Moderate volatility (broad market ETFs)
@@ -236,10 +240,14 @@ function calculateCrashLoss(instrumentName: string): number {
 
 // Calculate correction loss (smaller than crash) based on asset volatility
 function calculateCorrectionLoss(instrumentName: string): number {
+  // Gold spikes during corrections too
+  if (instrumentName.includes('Auksas') || instrumentName.includes('Auksas')) {
+    return -(5 + Math.random() * 5); // -5% to -10% (negative because gold goes up)
+  }
+  
   // Corrections are typically 10-20% losses, scaled by volatility
   const correctionLossMap: Record<string, [number, number]> = {
     // Low volatility assets
-    'Auksas': [5, 8],
     'ETF': [8, 12],
     
     // Moderate volatility
@@ -287,7 +295,7 @@ export function generateRandomReturn(baseRange: [number, number], volatilityFact
 
 // Calculate detailed projections with yearly breakdown including crash and correction scenarios
 export function calculateDetailedProjections(inputs: InvestmentInputs, period: number): { 
-  projectionData: Array<{ year: number; value: number; invested: number; bestCase: number; worstCase: number; }>;
+  projectionData: Array<{ year: number; value: number; invested: number; bestCase: number; worstCase: number; volatileValue: number; }>;
   yearlyCalculations: YearlyCalculation[];
 } {
   const portfolio = calculatePortfolio(inputs);
@@ -295,12 +303,19 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
   const projectionData = [];
   
   let currentValue = inputs.initialSum;
+  let volatileValue = inputs.initialSum; // Track volatile value for graph
   let recoveryState: { 
     isRecovering: boolean; 
     targetValue: number; 
     recoveryTimeRemaining: number; 
     totalRecoveryTime: number;
   } = { isRecovering: false, targetValue: 0, recoveryTimeRemaining: 0, totalRecoveryTime: 0 };
+  
+  let correctionState: {
+    isInCorrection: boolean;
+    correctionTimeRemaining: number;
+    totalCorrectionTime: number;
+  } = { isInCorrection: false, correctionTimeRemaining: 0, totalCorrectionTime: 0 };
   
   for (let year = 0; year <= period; year++) {
     const totalInvested = inputs.initialSum + inputs.monthlyContribution * 12 * year;
@@ -321,11 +336,11 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
       };
       yearlyCalculations.push(initialCalc);
     } else {
-      // Check for crash (18.7% probability) - only if not in recovery
-      const isCrashYear = !recoveryState.isRecovering && Math.random() < 0.187;
+      // Check for crash (18.7% probability) - only if not in recovery or correction
+      const isCrashYear = !recoveryState.isRecovering && !correctionState.isInCorrection && Math.random() < 0.187;
       
       // Check for correction (50% probability) - only if not crashing or recovering
-      const isCorrectionYear = !isCrashYear && !recoveryState.isRecovering && Math.random() < 0.5;
+      const isCorrectionYear = !isCrashYear && !recoveryState.isRecovering && !correctionState.isInCorrection && Math.random() < 0.5;
       
       const yearCalculation: YearlyCalculation = {
         year,
@@ -335,17 +350,23 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         isCrashYear,
         isRecoveryYear: recoveryState.isRecovering,
         isCorrectionYear,
-        recoveryTimeRemaining: recoveryState.recoveryTimeRemaining
+        recoveryTimeRemaining: recoveryState.recoveryTimeRemaining,
+        correctionRecoveryTimeRemaining: correctionState.correctionTimeRemaining
       };
       
       let newTotalValue = 0;
+      let newVolatileValue = 0;
       
-      // ALWAYS calculate normal returns for actual portfolio value (ignoring crashes/corrections)
+      // Calculate normal returns for actual portfolio value
       portfolio.instruments.forEach(instrument => {
         const allocation = currentValue * (instrument.percentage / 100);
+        const volatileAllocation = volatileValue * (instrument.percentage / 100);
         const returnRange = (instrument as any).returnRange || [5, 10];
         const normalReturn = generateRandomReturn(returnRange);
         const instrumentValue = allocation * (1 + normalReturn / 100) + (annualContribution * (instrument.percentage / 100));
+        
+        // Calculate volatile value with drawdowns
+        let volatileInstrumentValue = volatileAllocation * (1 + normalReturn / 100) + (annualContribution * (instrument.percentage / 100));
         
         // For logging purposes, calculate drawdowns but don't apply them to actual value
         let crashDrawdown: number | undefined;
@@ -356,7 +377,20 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         let correctionRecoveryProgress: number | undefined;
         
         if (isCrashYear) {
-          crashDrawdown = calculateCrashLoss(instrument.name);
+          const rawCrashDrawdown = calculateCrashLoss(instrument.name);
+          
+          // For gold, leave drawdown blank and add to ROI
+          if (instrument.name.includes('Auksas')) {
+            // Add the negative drawdown (positive gain) to the return
+            const goldBoost = Math.abs(rawCrashDrawdown);
+            volatileInstrumentValue = volatileAllocation * (1 + (normalReturn + goldBoost) / 100) + (annualContribution * (instrument.percentage / 100));
+            crashDrawdown = undefined; // Leave blank for gold
+          } else {
+            crashDrawdown = Math.abs(rawCrashDrawdown);
+            // Apply crash drawdown to volatile value
+            volatileInstrumentValue = volatileAllocation * (1 - crashDrawdown / 100) + (annualContribution * (instrument.percentage / 100));
+          }
+          
           recoveryState.targetValue = currentValue + annualContribution;
           recoveryState.totalRecoveryTime = 1 + Math.random() * 0.7; // 1-1.7 years
           recoveryState.recoveryTimeRemaining = recoveryState.totalRecoveryTime;
@@ -387,10 +421,39 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
             recoveryState.recoveryTimeRemaining -= 1;
           }
         } else if (isCorrectionYear) {
-          // Correction year - for logging only
-          correctionDrawdown = calculateCorrectionLoss(instrument.name);
+          const rawCorrectionDrawdown = calculateCorrectionLoss(instrument.name);
+          
+          // For gold, leave drawdown blank and add to ROI
+          if (instrument.name.includes('Auksas')) {
+            // Add the negative drawdown (positive gain) to the return
+            const goldBoost = Math.abs(rawCorrectionDrawdown);
+            volatileInstrumentValue = volatileAllocation * (1 + (normalReturn + goldBoost) / 100) + (annualContribution * (instrument.percentage / 100));
+            correctionDrawdown = undefined; // Leave blank for gold
+          } else {
+            correctionDrawdown = Math.abs(rawCorrectionDrawdown);
+            // Apply correction drawdown to volatile value
+            volatileInstrumentValue = volatileAllocation * (1 - correctionDrawdown / 100) + (annualContribution * (instrument.percentage / 100));
+          }
+          
+          correctionState.totalCorrectionTime = 0.5 + Math.random() * 0.33; // 6-10 months
+          correctionState.correctionTimeRemaining = correctionState.totalCorrectionTime;
+          correctionState.isInCorrection = true;
+          
           isCorrection = true;
           correctionRecoveryProgress = 1; // Assume full recovery within 6-10 months
+          
+          if (correctionState.totalCorrectionTime <= 1) {
+            correctionState.isInCorrection = false;
+          } else {
+            correctionState.correctionTimeRemaining -= 1;
+          }
+        } else if (correctionState.isInCorrection) {
+          // Continuing correction recovery
+          if (correctionState.correctionTimeRemaining <= 1) {
+            correctionState.isInCorrection = false;
+          } else {
+            correctionState.correctionTimeRemaining -= 1;
+          }
         }
         
         yearCalculation.instruments.push({
@@ -407,10 +470,12 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         });
         
         newTotalValue += instrumentValue;
+        newVolatileValue += volatileInstrumentValue;
       });
       
       yearCalculation.totalValue = newTotalValue;
       currentValue = newTotalValue;
+      volatileValue = newVolatileValue;
       yearlyCalculations.push(yearCalculation);
     }
     
@@ -419,7 +484,8 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
       value: Math.round(currentValue),
       invested: totalInvested,
       bestCase: Math.round(currentValue * 1.3),
-      worstCase: Math.round(currentValue * 0.7)
+      worstCase: Math.round(currentValue * 0.7),
+      volatileValue: Math.round(volatileValue)
     });
   }
   

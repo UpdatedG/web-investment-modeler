@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,14 +66,6 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
               <span>Prisijungti</span>
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => setShowDebugTable(!showDebugTable)}
-            className="flex items-center space-x-2"
-          >
-            <Calculator className="h-4 w-4" />
-            <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>
-          </Button>
           <div className="flex items-center space-x-2 text-green-600">
             <TrendingUp className="h-5 w-5" />
             <span className="font-medium">{portfolio.riskLevel}</span>
@@ -94,11 +85,6 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
 
       {/* Portfolio sudėtis */}
       <PortfolioBreakdown portfolio={portfolio} />
-
-      {/* Debug lentelė */}
-      {showDebugTable && (
-        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
-      )}
 
       {/* LLM Chat sekcija */}
       <Card>
@@ -155,7 +141,14 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
         data={projectionData} 
         period={selectedPeriod}
         inputs={inputs}
+        showDebugTable={showDebugTable}
+        onToggleDebugTable={() => setShowDebugTable(!showDebugTable)}
       />
+
+      {/* Debug lentelė */}
+      {showDebugTable && (
+        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
+      )}
 
       {/* Prognozės santrauka */}
       <Card>
