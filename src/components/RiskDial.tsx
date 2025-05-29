@@ -11,17 +11,8 @@ interface RiskDialProps {
 }
 
 export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, familySituation }) => {
-  const riskLevels = [
-    { level: 0, label: 'Minimali rizika', icon: Shield, color: 'text-green-600', bg: 'bg-green-100' },
-    { level: 1, label: 'Maža rizika', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-100' },
-    { level: 2, label: 'Vidutinė rizika', icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-100' },
-    { level: 3, label: 'Didesnė rizika', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-100' },
-    { level: 4, label: 'Didelė rizika', icon: Rocket, color: 'text-red-600', bg: 'bg-red-100' },
-    { level: 5, label: 'Ultra rizika', icon: Star, color: 'text-purple-600', bg: 'bg-purple-100' }
-  ];
-
   // Function to determine risk recommendation based on age and family situation
-  const getRiskRecommendation = (riskLevel: number): 'acceptable' | 'risky' | 'not-recommended' => {
+  const getRiskRecommendation = React.useCallback((riskLevel: number): 'acceptable' | 'risky' | 'not-recommended' => {
     if (!age || !familySituation) return 'acceptable';
 
     // Map family situation values to the table format
@@ -78,7 +69,16 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
     } else {
       return 'not-recommended';
     }
-  };
+  }, [age, familySituation]);
+
+  const riskLevels = [
+    { level: 0, label: 'Minimali rizika', icon: Shield, color: 'text-green-600', bg: 'bg-green-100' },
+    { level: 1, label: 'Maža rizika', icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-100' },
+    { level: 2, label: 'Vidutinė rizika', icon: Zap, color: 'text-yellow-600', bg: 'bg-yellow-100' },
+    { level: 3, label: 'Didesnė rizika', icon: Flame, color: 'text-orange-600', bg: 'bg-orange-100' },
+    { level: 4, label: 'Didelė rizika', icon: Rocket, color: 'text-red-600', bg: 'bg-red-100' },
+    { level: 5, label: 'Ultra rizika', icon: Star, color: 'text-purple-600', bg: 'bg-purple-100' }
+  ];
 
   const getButtonStyles = (risk: any) => {
     const recommendation = getRiskRecommendation(risk.level);
