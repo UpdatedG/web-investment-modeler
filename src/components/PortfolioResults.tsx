@@ -6,8 +6,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { PortfolioChart } from '@/components/PortfolioChart';
 import { PortfolioBreakdown } from '@/components/PortfolioBreakdown';
-import { calculatePortfolio } from '@/utils/portfolioCalculator';
-import { AlertTriangle, ArrowLeft, TrendingUp, MessageCircle, LogIn } from 'lucide-react';
+import { CalculationsDebugTable } from '@/components/CalculationsDebugTable';
+import { calculatePortfolio, calculateDetailedProjections } from '@/utils/portfolioCalculator';
+import { AlertTriangle, ArrowLeft, TrendingUp, MessageCircle, LogIn, Calculator } from 'lucide-react';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioResultsProps {
@@ -18,11 +19,12 @@ interface PortfolioResultsProps {
 export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onReset }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(inputs.timeHorizon);
   const [showChat, setShowChat] = useState(false);
+  const [showDebugTable, setShowDebugTable] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   
   const portfolio = calculatePortfolio(inputs);
-  const projectionData = calculateProjections(inputs, selectedPeriod);
+  const { projectionData, yearlyCalculations } = calculateDetailedProjections(inputs, selectedPeriod);
 
   const handleChatSubmit = () => {
     if (!isLoggedIn) {
@@ -65,6 +67,14 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
               <span>Prisijungti</span>
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={() => setShowDebugTable(!showDebugTable)}
+            className="flex items-center space-x-2"
+          >
+            <Calculator className="h-4 w-4" />
+            <span>{showDebugTable ? 'Slėpti' : 'Rodyti'} skaičiavimus</span>
+          </Button>
           <div className="flex items-center space-x-2 text-green-600">
             <TrendingUp className="h-5 w-5" />
             <span className="font-medium">{portfolio.riskLevel}</span>
@@ -84,6 +94,11 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
 
       {/* Portfolio sudėtis */}
       <PortfolioBreakdown portfolio={portfolio} />
+
+      {/* Debug lentelė */}
+      {showDebugTable && (
+        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
+      )}
 
       {/* LLM Chat sekcija */}
       <Card>
@@ -173,43 +188,3 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
     </div>
   );
 };
-
-// Papildoma funkcija projekcijų skaičiavimui su scenarijais
-function calculateProjections(inputs: InvestmentInputs, period: number) {
-  const portfolio = calculatePortfolio(inputs);
-  const baseReturn = getExpectedReturn(portfolio.riskLevel);
-  
-  const data = [];
-  let currentValue = inputs.initialSum;
-  
-  for (let month = 0; month <= period * 12; month++) {
-    if (month > 0) {
-      const monthlyReturn = baseReturn / 12;
-      currentValue = currentValue * (1 + monthlyReturn) + inputs.monthlyContribution;
-    }
-    
-    if (month % 12 === 0) {
-      data.push({
-        year: month / 12,
-        value: Math.round(currentValue),
-        invested: inputs.initialSum + inputs.monthlyContribution * month,
-        bestCase: Math.round(currentValue * 1.3), // 30% better than median
-        worstCase: Math.round(currentValue * 0.7)  // 30% worse than median
-      });
-    }
-  }
-  
-  return data;
-}
-
-function getExpectedReturn(riskLevel: string): number {
-  const returns: Record<string, number> = {
-    'Minimali rizika': 0.05,
-    'Maža rizika': 0.07,
-    'Vidutinė rizika': 0.09,
-    'Didesnė rizika': 0.12,
-    'Didelė rizika': 0.15,
-    'Ultra rizika': 0.20
-  };
-  return returns[riskLevel] || 0.07;
-}

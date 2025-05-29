@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioChartProps {
@@ -23,6 +23,9 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ data, period, in
     <Card>
       <CardHeader>
         <CardTitle>Portfolio augimo projekcija ({period} metų)</CardTitle>
+        <p className="text-sm text-gray-600">
+          Projekcijos pagrįstos realiais istoriniais duomenimis su atsitiktiniu volatilumu
+        </p>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={400}>
@@ -39,10 +42,10 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ data, period, in
             <Tooltip 
               formatter={(value: number, name: string) => {
                 const labels: Record<string, string> = {
-                  'value': 'Vidutinis scenarijus',
+                  'value': 'Projektyta vertė',
                   'invested': 'Investuota suma',
-                  'bestCase': 'Geriausias scenarijus',
-                  'worstCase': 'Blogiausias scenarijus'
+                  'bestCase': 'Optimistinis scenarijus',
+                  'worstCase': 'Pesimistinis scenarijus'
                 };
                 return [formatCurrency(value), labels[name] || name];
               }}
@@ -86,22 +89,22 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({ data, period, in
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-red-500"></div>
-            <span>Blogiausias scenarijus</span>
+            <span>Pesimistinis scenarijus</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-1 bg-green-500"></div>
-            <span>Vidutinis scenarijus</span>
+            <span>Projektyta vertė</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-blue-500"></div>
-            <span>Geriausias scenarijus</span>
+            <span>Optimistinis scenarijus</span>
           </div>
         </div>
         
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>
-            Projekcijos pagrįstos istoriniais duomenimis ir gali skirtis nuo realių rezultatų. 
-            Praeities veikla negarantuoja ateities rezultatų.
+            Projekcijos naudoja tikrus istorinės grąžos duomenis su atsitiktiniu volatilumu kiekvienais metais. 
+            Rezultatai gali skirtis kiekviename naujame skaičiavime.
           </p>
         </div>
       </CardContent>
