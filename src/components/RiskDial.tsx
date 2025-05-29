@@ -13,6 +13,8 @@ interface RiskDialProps {
 export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, familySituation }) => {
   // Function to determine risk recommendation based on age and family situation
   const getRiskRecommendation = React.useCallback((riskLevel: number): 'acceptable' | 'risky' | 'not-recommended' => {
+    console.log(`Checking risk level ${riskLevel}, age: ${age}, family: ${familySituation}`);
+    
     if (!age || !familySituation) return 'acceptable';
 
     // Map family situation values to the table format
@@ -62,6 +64,8 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
       maxRiskyLevel = 2; // Vidutinė is risky
     }
 
+    console.log(`Age ${age}, family ${familySituation}, maxAcceptable: ${maxAcceptableRisk}, maxRisky: ${maxRiskyLevel}`);
+
     if (riskLevel <= maxAcceptableRisk) {
       return 'acceptable';
     } else if (riskLevel <= maxRiskyLevel) {
@@ -84,20 +88,24 @@ export const RiskDial: React.FC<RiskDialProps> = ({ value, onChange, age, family
     const recommendation = getRiskRecommendation(risk.level);
     const isSelected = value === risk.level;
 
-    console.log(`Risk level ${risk.level}, recommendation: ${recommendation}, age: ${age}, family: ${familySituation}`);
+    console.log(`Risk level ${risk.level}, recommendation: ${recommendation}, isSelected: ${isSelected}`);
 
     // Base styles
     let classes = 'p-3 rounded-lg border-2 transition-all duration-200';
     
     // Apply color coding based on recommendation
     if (recommendation === 'not-recommended') {
-      classes += isSelected 
-        ? ' border-red-500 bg-red-100' 
-        : ' border-red-300 bg-red-50 hover:border-red-400';
+      if (isSelected) {
+        classes += ' border-red-500 bg-red-200 text-red-800';
+      } else {
+        classes += ' border-red-400 bg-red-100 hover:border-red-500 hover:bg-red-200';
+      }
     } else if (recommendation === 'risky') {
-      classes += isSelected 
-        ? ' border-yellow-500 bg-yellow-100' 
-        : ' border-yellow-300 bg-yellow-50 hover:border-yellow-400';
+      if (isSelected) {
+        classes += ' border-yellow-500 bg-yellow-200 text-yellow-800';
+      } else {
+        classes += ' border-yellow-400 bg-yellow-100 hover:border-yellow-500 hover:bg-yellow-200';
+      }
     } else {
       // Acceptable risk - use normal colors
       if (isSelected) {

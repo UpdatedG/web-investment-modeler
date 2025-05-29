@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
@@ -10,22 +11,20 @@ interface PortfolioBreakdownProps {
 export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfolio }) => {
   const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
   
-  // Function to format instrument names with line breaks after each ticker for pie chart
+  // Function to format instrument names with line breaks after each ticker for pie chart ONLY
   const formatInstrumentNameForChart = (name: string) => {
+    console.log('Original name:', name);
     // Look for pattern like "ETF_NAME (TICKER1, TICKER2, TICKER3)" and add line breaks
     const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
     if (tickerMatch) {
       const [, etfName, tickers, rest] = tickerMatch;
       // Split tickers by comma and add line breaks after each
       const formattedTickers = tickers.split(',').map(ticker => ticker.trim()).join(',\n');
-      return `${etfName} (${formattedTickers})\n${rest}`.trim();
+      const formatted = `${etfName}\n(${formattedTickers})${rest ? '\n' + rest : ''}`.trim();
+      console.log('Formatted for chart:', formatted);
+      return formatted;
     }
     return name;
-  };
-
-  // Function to format instrument names for the list (keep original format)
-  const formatInstrumentName = (name: string) => {
-    return name; // Keep original format without line breaks for the list
   };
 
   const chartData = portfolio.instruments.map((instrument, index) => ({
@@ -37,7 +36,7 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
 
   // Custom label function for pie chart
   const renderCustomLabel = ({ chartName, percentage }: any) => {
-    return `${chartName}: ${percentage}%`;
+    return `${percentage}%`;
   };
 
   return (
@@ -81,7 +80,7 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
               <div key={index} className="border-l-4 pl-4" style={{ borderColor: colors[index % colors.length] }}>
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-semibold text-gray-900 leading-tight">
-                    {formatInstrumentName(instrument.name)}
+                    {instrument.name}
                   </h4>
                   <span className="text-lg font-bold text-gray-700 ml-2 flex-shrink-0">{instrument.percentage}%</span>
                 </div>
