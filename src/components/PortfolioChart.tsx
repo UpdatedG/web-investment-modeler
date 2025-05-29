@@ -39,7 +39,8 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
         <div>
           <CardTitle>Portfolio augimo projekcija ({period} metų)</CardTitle>
           <p className="text-sm text-gray-600">
-            Projekcijos pagrįstos realiais istoriniais duomenimis su atsitiktiniu volatilumu
+            Projekcijos pagrįstos realiais istoriniais duomenimis (vidutiniais intervalais) pritaikant tai turto klasei būdingą volatyvumą.
+            Istoriniai duomenys negarantuoja ateities rezultatų.
           </p>
         </div>
       </CardHeader>
@@ -117,11 +118,11 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-yellow-500"></div>
-            <span>Su volatilumu</span>
+            <span>Volatyvumas</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-1 bg-green-500"></div>
-            <span>Projektyta vertė</span>
+            <span>Portfelio vertė (projekcija)</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-0.5 bg-blue-500"></div>
