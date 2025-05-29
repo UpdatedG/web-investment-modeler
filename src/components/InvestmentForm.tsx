@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AgeDial } from '@/components/AgeDial';
+import { InitialSumDial } from '@/components/InitialSumDial';
+import { FamilySituationSelector } from '@/components/FamilySituationSelector';
 import { RiskDial } from '@/components/RiskDial';
 import { ManagementDial } from '@/components/ManagementDial';
 import { GeographySelector } from '@/components/GeographySelector';
@@ -40,61 +42,42 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Asmeninė informacija */}
+        {/* Amžius */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Asmeninė informacija</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <Label htmlFor="age">Amžius</Label>
-              <Input
-                id="age"
-                type="number"
-                min="18"
-                max="80"
-                value={formData.age}
-                onChange={(e) => updateField('age', parseInt(e.target.value))}
-                className="mt-2"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="family">Šeimos padėtis</Label>
-              <Select value={formData.familySituation} onValueChange={(value) => updateField('familySituation', value)}>
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Pasirinkite šeimos padėtį" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Vienišas/a</SelectItem>
-                  <SelectItem value="couple">Pora be vaikų</SelectItem>
-                  <SelectItem value="family">Šeima su vaikais</SelectItem>
-                  <SelectItem value="single-parent">Vienas iš tėvų</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <CardContent className="pt-6">
+            <AgeDial 
+              value={formData.age} 
+              onChange={(value) => updateField('age', value)} 
+            />
           </CardContent>
         </Card>
 
-        {/* Finansinė informacija */}
+        {/* Pradinė suma */}
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardContent className="pt-6">
+            <InitialSumDial 
+              value={formData.initialSum} 
+              onChange={(value) => updateField('initialSum', value)} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Šeimos padėtis */}
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardContent className="pt-6">
+            <FamilySituationSelector 
+              value={formData.familySituation} 
+              onChange={(value) => updateField('familySituation', value)} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Mėnesinis įnašas */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
           <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Finansinė informacija</CardTitle>
+            <CardTitle className="text-xl text-gray-800">Mėnesinis įnašas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div>
-              <Label htmlFor="initial">Pradinė suma (€)</Label>
-              <Input
-                id="initial"
-                type="number"
-                min="100"
-                step="50"
-                value={formData.initialSum}
-                onChange={(e) => updateField('initialSum', parseInt(e.target.value))}
-                className="mt-2"
-              />
-            </div>
-            
             <div>
               <Label htmlFor="monthly">Mėnesinis įnašas (€)</Label>
               <Input
@@ -182,7 +165,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
           size="lg"
           className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-3 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
         >
-          Gauti investavimo rekomendacijas
+          Sumodeliuoti galimą gražą
         </Button>
       </div>
     </form>
