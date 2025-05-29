@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import { AgeDial } from '@/components/AgeDial';
 import { InitialSumDial } from '@/components/InitialSumDial';
+import { MonthlyContributionDial } from '@/components/MonthlyContributionDial';
+import { TimeHorizonDial } from '@/components/TimeHorizonDial';
 import { FamilySituationSelector } from '@/components/FamilySituationSelector';
 import { RiskDial } from '@/components/RiskDial';
 import { ManagementDial } from '@/components/ManagementDial';
@@ -74,44 +74,27 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
 
         {/* Mėnesinis įnašas */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Mėnesinis įnašas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <Label htmlFor="monthly">Mėnesinis įnašas (€)</Label>
-              <Input
-                id="monthly"
-                type="number"
-                min="0"
-                step="10"
-                value={formData.monthlyContribution}
-                onChange={(e) => updateField('monthlyContribution', parseInt(e.target.value))}
-                className="mt-2"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="horizon">Investavimo laikotarpis (metai)</Label>
-              <Input
-                id="horizon"
-                type="number"
-                min="1"
-                max="50"
-                value={formData.timeHorizon}
-                onChange={(e) => updateField('timeHorizon', parseInt(e.target.value))}
-                className="mt-2"
-              />
-            </div>
+          <CardContent className="pt-6">
+            <MonthlyContributionDial 
+              value={formData.monthlyContribution} 
+              onChange={(value) => updateField('monthlyContribution', value)} 
+            />
+          </CardContent>
+        </Card>
+
+        {/* Investavimo laikotarpis */}
+        <Card className="hover:shadow-lg transition-shadow duration-300">
+          <CardContent className="pt-6">
+            <TimeHorizonDial 
+              value={formData.timeHorizon} 
+              onChange={(value) => updateField('timeHorizon', value)} 
+            />
           </CardContent>
         </Card>
 
         {/* Rizikos tolerancija */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Rizikos tolerancija</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <RiskDial 
               value={formData.riskTolerance} 
               onChange={(value) => updateField('riskTolerance', value)} 
@@ -121,10 +104,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
 
         {/* Valdymo preferencijos */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Valdymo preferencijos</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <ManagementDial 
               value={formData.managementPreference} 
               onChange={(value) => updateField('managementPreference', value)} 
@@ -134,10 +114,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
 
         {/* Geografijos preferencijos */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Geografijos preferencijos</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <GeographySelector 
               value={formData.geographyPreference} 
               onChange={(value) => updateField('geographyPreference', value)} 
@@ -147,10 +124,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ onSubmit }) => {
 
         {/* Sektorių preferencijos */}
         <Card className="hover:shadow-lg transition-shadow duration-300">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">Sektorių preferencijos</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <SectorSelector 
               value={formData.sectorPreference} 
               onChange={(value) => updateField('sectorPreference', value)} 
