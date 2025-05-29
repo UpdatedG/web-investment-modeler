@@ -8,7 +8,7 @@ import { PortfolioChart } from '@/components/PortfolioChart';
 import { PortfolioBreakdown } from '@/components/PortfolioBreakdown';
 import { CalculationsDebugTable } from '@/components/CalculationsDebugTable';
 import { calculatePortfolio, calculateDetailedProjections } from '@/utils/portfolioCalculator';
-import { AlertTriangle, ArrowLeft, TrendingUp, MessageCircle, LogIn, Calculator } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, TrendingUp, MessageCircle, LogIn, Calculator, MessageSquare } from 'lucide-react';
 import type { InvestmentInputs } from '@/pages/Index';
 
 interface PortfolioResultsProps {
@@ -47,6 +47,10 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
     alert('Sėkmingai prisijungėte!');
   };
 
+  const handleFeedback = () => {
+    window.open('https://www.reddit.com/message/compose/?to=violt', '_blank');
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Antraštė su grįžimo mygtuku */}
@@ -63,6 +67,13 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           <h2 className="text-3xl font-bold text-gray-900">Jūsų investavimo planas</h2>
         </div>
         <div className="flex items-center space-x-4">
+          <Button 
+            onClick={handleFeedback}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span>Palikti atsiliepimą</span>
+          </Button>
           {!isLoggedIn && (
             <Button 
               onClick={handleLogin}
@@ -151,8 +162,6 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
         onToggleDebugTable={() => setShowDebugTable(!showDebugTable)}
       />
 
-      
-
       {/* Prognozės santrauka */}
       <Card>
         <CardHeader>
@@ -191,10 +200,22 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           </div>
         </CardContent>
       </Card>
+
       {/* Debug lentelė */}
       {showDebugTable && (
         <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
       )}
+
+      {/* Apatinis atsiliepimo mygtukas */}
+      <div className="flex justify-center">
+        <Button 
+          onClick={handleFeedback}
+          className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+        >
+          <MessageSquare className="h-4 w-4" />
+          <span>Palikti atsiliepimą</span>
+        </Button>
+      </div>
     </div>
   );
 };

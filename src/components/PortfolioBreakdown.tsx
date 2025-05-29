@@ -16,6 +16,17 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
     fill: colors[index % colors.length]
   }));
 
+  // Function to format instrument names with line breaks after tickers
+  const formatInstrumentName = (name: string) => {
+    // Look for pattern like "ETF_NAME (TICKER)" and add line break after ticker
+    const tickerMatch = name.match(/^(.+)\s+\(([^)]+)\)(.*)$/);
+    if (tickerMatch) {
+      const [, etfName, ticker, rest] = tickerMatch;
+      return `${etfName} (${ticker})\n${rest}`.trim();
+    }
+    return name;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Portfolio skirstinys */}
@@ -54,8 +65,10 @@ export const PortfolioBreakdown: React.FC<PortfolioBreakdownProps> = ({ portfoli
             {portfolio.instruments.map((instrument, index) => (
               <div key={index} className="border-l-4 pl-4" style={{ borderColor: colors[index % colors.length] }}>
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-semibold text-gray-900">{instrument.name}</h4>
-                  <span className="text-lg font-bold text-gray-700">{instrument.percentage}%</span>
+                  <h4 className="font-semibold text-gray-900 whitespace-pre-line leading-tight">
+                    {formatInstrumentName(instrument.name)}
+                  </h4>
+                  <span className="text-lg font-bold text-gray-700 ml-2 flex-shrink-0">{instrument.percentage}%</span>
                 </div>
                 <p className="text-sm text-gray-600">{instrument.description}</p>
               </div>
