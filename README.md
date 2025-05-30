@@ -33,7 +33,7 @@ This investment calculator provides:
 - **Contribution scenario analysis** (stopping vs. doubling contributions)
 - **Comprehensive risk statistics** including drawdown tracking and margin call detection
 - **Active management education** with research-backed warnings about underperformance
-- **"The Brutal Truth" modal** showing academic research on active vs. passive investing
+- **"The Brutal Truth" modal** some light troling 
 
 ## How Calculations Are Made
 
@@ -56,35 +56,21 @@ Calculations are based on:
   - **Volatile**: Realistic year-to-year fluctuations
 
 ### Accuracy
-- **Approximate accuracy**: ±15-25% over 10+ year periods. The for higher risk asset classes that include options and crypto ETF accuracy is "ballpark" due to lack of historical data and testing
+- **Approximate accuracy**: ±10-15% over 10+ year periods. The for higher risk asset classes that include options and crypto ETF accuracy is "best effort" due to lack of historical
 - **Based on**: Historical market data from major European and global indices
 - **Limitations**: Past performance does not guarantee future results
 - **Volatility**: Real markets experience significant short-term fluctuations
 
 The calculator is designed for educational and planning purposes, mostly visualisation. Always consult with qualified financial advisors for personalized investment advice.
 
-### Active Management Education
 
-The calculator includes an educational feature that demonstrates the challenges of active investment management:
 
-- **Smart Portfolio Adaptation**: When users select "medium-active" or "active" management preferences, ETF allocations are automatically replaced with individual stock picks (e.g., "Technology ETF" becomes "Tech stocks (Apple, Microsoft, Google, Tesla)")
-- **Research-Based Warnings**: Users receive warnings about expected underperformance based on academic research
-- **"The Brutal Truth" Modal**: Clicking "Why?" opens a comprehensive modal with academic research showing:
-  - 98%+ of active stock pickers underperform the market over 20 years
-  - 88.99% of large-cap US funds underperformed the S&P 500 over 10 years  
-  - 90% of retail investors lose money or underperform the broader market
-  - Detailed findings from Barber & Odean (Berkeley) and DALBAR research studies
-- **Educational Purpose**: This feature helps users understand why passive index investing typically outperforms active stock picking for most investors
-
-**Note**: The underlying calculations remain mathematically identical regardless of management preference - only the display names and educational warnings change.
-
-### WARNING
+### DISCLAMER
 - **This is mostly vibecoded stuff dont hate me for it**
 
 ### Known issues
 - **Low accuracy for highest-risk assets**
-- **Sector and geography preferences DO impact calculations** with different return ranges (Technology: 18.3-18.8%, Energy: 2.1-4.8%, etc.)
-- **Management preference is purely educational** - it only changes display names and warnings, not actual calculations
+- - **Management preference is purely educational** - it only changes display names and warnings, not actual calculations
 
 ## Technology Stack
 
