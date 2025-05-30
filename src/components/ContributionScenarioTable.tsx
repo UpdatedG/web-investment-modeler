@@ -28,9 +28,20 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
     let growth: number;
     
     if (stopYear) {
+      // Skip scenarios where stopYear >= period (doesn't make sense)
+      if (stopYear >= period) {
+        return null;
+      }
+      
       // For stop scenarios, calculate manually using baseline projection
       const { projectionData: baselineProjection } = calculateDetailedProjections(inputs, period, isEnglish ? 'en' : 'lt');
       const stopYearData = baselineProjection[stopYear];
+      
+      // Safety check
+      if (!stopYearData) {
+        return null;
+      }
+      
       const stopYearValue = stopYearData.value;
       const stopYearContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * stopYear);
       
@@ -67,28 +78,40 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
     };
   };
 
-  const scenarios = [
+  // Create scenarios dynamically based on period
+  const possibleScenarios = [
     {
       id: 'stop1',
       name: isEnglish ? 'Stop after 1 year' : 'Sustabdyti po 1 metų',
       icon: <Pause className="h-4 w-4 text-red-500" />,
       description: isEnglish ? 'No more contributions after year 1' : 'Daugiau nebeįmokėti po 1 metų',
-      ...calculateScenario(1)
+      stopYear: 1
     },
     {
       id: 'stop3',
       name: isEnglish ? 'Stop after 3 years' : 'Sustabdyti po 3 metų',
       icon: <Pause className="h-4 w-4 text-orange-500" />,
       description: isEnglish ? 'No more contributions after year 3' : 'Daugiau nebeįmokėti po 3 metų',
-      ...calculateScenario(3)
+      stopYear: 3
     },
     {
       id: 'stop10',
       name: isEnglish ? 'Stop after 10 years' : 'Sustabdyti po 10 metų',
       icon: <Pause className="h-4 w-4 text-yellow-500" />,
       description: isEnglish ? 'No more contributions after year 10' : 'Daugiau nebeįmokėti po 10 metų',
-      ...calculateScenario(10)
-    },
+      stopYear: 10
+    }
+  ];
+
+  // Filter scenarios that make sense for the selected period and calculate their values
+  const scenarios = [
+    ...possibleScenarios
+      .filter(scenario => scenario.stopYear < period)
+      .map(scenario => {
+        const calculation = calculateScenario(scenario.stopYear);
+        return calculation ? { ...scenario, ...calculation } : null;
+      })
+      .filter(Boolean),
     {
       id: 'baseline',
       name: isEnglish ? 'Current plan' : 'Dabartinis planas',
@@ -99,15 +122,20 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
       growth: baselineValue - (inputs.initialSum + (inputs.monthlyContribution * 12 * period)),
       differenceFromBaseline: 0,
       percentageDifference: 0
-    },
-    {
+    }
+  ];
+
+  // Add doubling scenario with error handling
+  const doublingCalculation = calculateScenario(null, 2);
+  if (doublingCalculation) {
+    scenarios.push({
       id: 'double',
       name: isEnglish ? 'Double contributions' : 'Dvigubos įmokos',
       icon: <Zap className="h-4 w-4 text-green-500" />,
       description: isEnglish ? 'Double monthly contributions' : 'Dvigubinti mėnesines įmokas',
-      ...calculateScenario(null, 2)
-    }
-  ];
+      ...doublingCalculation
+    });
+  }
 
   return (
     <Card>
