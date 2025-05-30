@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +5,11 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
 import { PortfolioChart } from '@/components/PortfolioChart';
 import { PortfolioBreakdown } from '@/components/PortfolioBreakdown';
-import { CalculationsDebugTable } from '@/components/CalculationsDebugTable';
+import { DebugModal } from '@/components/DebugModal';
+import { BrutalTruthModal } from '@/components/BrutalTruthModal';
+import { ContributionGrowthChart } from '@/components/ContributionGrowthChart';
+import { SharpeRatioDisplay } from '@/components/SharpeRatioDisplay';
+import { ContributionScenarioTable } from '@/components/ContributionScenarioTable';
 import { calculatePortfolio, calculateDetailedProjections } from '@/utils/portfolioCalculator';
 import { AlertTriangle, ArrowLeft, TrendingUp, Calculator, MessageSquare } from 'lucide-react';
 import { Github } from 'lucide-react';
@@ -20,6 +23,7 @@ interface PortfolioResultsProps {
 export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onReset }) => {
   const [selectedPeriod, setSelectedPeriod] = useState(inputs.timeHorizon);
   const [showDebugTable, setShowDebugTable] = useState(false);
+  const [showBrutalTruth, setShowBrutalTruth] = useState(false);
   
   // Scroll to top when component mounts
   useEffect(() => {
@@ -29,7 +33,7 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
   const portfolio = calculatePortfolio(inputs, 'lt');
   
   // Calculate projections only once using useMemo
-  const { projectionData, yearlyCalculations } = useMemo(() => 
+  const { projectionData, yearlyCalculations, drawdownStats, performanceMetrics } = useMemo(() => 
     calculateDetailedProjections(inputs, selectedPeriod, 'lt'), 
     [inputs, selectedPeriod]
   );
@@ -50,7 +54,7 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           <Button 
             variant="outline" 
             onClick={onReset}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-2 border-2 border-gray-300 hover:border-gray-400 font-medium"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Atgal</span>
@@ -58,13 +62,6 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           <h2 className="text-3xl font-bold text-gray-900">Jūsų investavimo planas</h2>
         </div>
         <div className="flex items-center space-x-4">
-          <Button 
-            onClick={handleFeedback}
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-          >
-            <MessageSquare className="h-4 w-4" />
-            <span>Palikti atsiliepimą</span>
-          </Button>
           <div className="flex items-center space-x-2 text-green-600">
             <TrendingUp className="h-5 w-5" />
             <span className="font-medium">{portfolio.riskLevel}</span>
@@ -78,6 +75,17 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           <AlertTriangle className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-800">
             {portfolio.warning}
+            {(portfolio.warning.includes('aktyvų valdymą') || portfolio.warning.includes('active management')) && (
+              <>
+                {' '}
+                <button
+                  onClick={() => setShowBrutalTruth(true)}
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Kodėl?
+                </button>
+              </>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -113,6 +121,27 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
         inputs={inputs}
         showDebugTable={showDebugTable}
         onToggleDebugTable={() => setShowDebugTable(!showDebugTable)}
+      />
+
+      {/* Contribution vs Growth Breakdown */}
+      <ContributionGrowthChart 
+        projectionData={projectionData}
+        isEnglish={false}
+      />
+
+      {/* Sharpe Ratio and Performance Metrics */}
+      <SharpeRatioDisplay 
+        sharpeRatio={performanceMetrics.sharpeRatio}
+        cagr={performanceMetrics.cagr}
+        isEnglish={false}
+      />
+
+      {/* Contribution Scenario Analysis */}
+      <ContributionScenarioTable 
+        inputs={inputs}
+        period={selectedPeriod}
+        baselineValue={projectionData[projectionData.length - 1]?.value || 0}
+        isEnglish={false}
       />
 
       {/* Forecast summary */}
@@ -154,10 +183,64 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
         </CardContent>
       </Card>
 
-      {/* Debug table */}
-      {showDebugTable && (
-        <CalculationsDebugTable yearlyCalculations={yearlyCalculations} />
-      )}
+      {/* Drawdown and Risk Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Rizikos statistika (volatilumas)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {drawdownStats.isMarginCalled ? (
+            <Alert className="border-red-200 bg-red-50 mb-4">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription className="text-red-800">
+                <strong>MARGIN CALL:</strong> Pagal modelį, portfolio būtų buvęs likviduotas {drawdownStats.marginCallYear} metais. 
+                Tikroji vertė turėtų būti nustatyta į €0.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Žemiausia vertė</p>
+              <p className="text-xl font-bold text-red-600">
+                €{drawdownStats.lowestValue.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">{drawdownStats.lowestValueYear} metais</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Didžiausias kritimas</p>
+              <p className="text-xl font-bold text-red-600">
+                -{drawdownStats.maxDrawdownPercent}%
+              </p>
+              <p className="text-xs text-gray-500">{drawdownStats.maxDrawdownYear} metais</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Aukščiausia vertė</p>
+              <p className="text-xl font-bold text-green-600">
+                €{drawdownStats.peakValue.toLocaleString()}
+              </p>
+              <p className="text-xs text-gray-500">{drawdownStats.peakValueYear} metais</p>
+            </div>
+            <div className="text-center">
+              <p className="text-sm text-gray-600">Portfolio statusas</p>
+              <p className={`text-xl font-bold ${drawdownStats.isMarginCalled ? 'text-red-600' : 'text-green-600'}`}>
+                {drawdownStats.isMarginCalled ? 'Likviduotas' : 'Aktyvus'}
+              </p>
+              {drawdownStats.isMarginCalled && (
+                <p className="text-xs text-gray-500">{drawdownStats.marginCallYear} metais</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Debug modal */}
+      <DebugModal
+        isOpen={showDebugTable}
+        onClose={() => setShowDebugTable(false)}
+        yearlyCalculations={yearlyCalculations}
+        language="lt"
+      />
 
       {/* Bottom buttons */}
       <div className="flex justify-center space-x-4">
@@ -177,6 +260,13 @@ export const PortfolioResults: React.FC<PortfolioResultsProps> = ({ inputs, onRe
           <span>Šaltinio kodas</span>
         </Button>
       </div>
+
+      {/* Brutal Truth Modal */}
+      <BrutalTruthModal
+        isOpen={showBrutalTruth}
+        onClose={() => setShowBrutalTruth(false)}
+        isEnglish={false}
+      />
     </div>
   );
 };

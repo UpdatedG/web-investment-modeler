@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -85,13 +84,6 @@ export const PortfolioChartEn: React.FC<PortfolioChartEnProps> = ({
             />
             <Line
               type="monotone"
-              dataKey="volatileValue"
-              stroke="#F59E0B"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              type="monotone"
               dataKey="value"
               stroke="#10B981"
               strokeWidth={3}
@@ -117,10 +109,6 @@ export const PortfolioChartEn: React.FC<PortfolioChartEnProps> = ({
             <span>Pessimistic scenario</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-0.5 bg-yellow-500"></div>
-            <span>Volatility</span>
-          </div>
-          <div className="flex items-center space-x-2">
             <div className="w-4 h-1 bg-green-500"></div>
             <span>Portfolio value (projection)</span>
           </div>
@@ -133,7 +121,6 @@ export const PortfolioChartEn: React.FC<PortfolioChartEnProps> = ({
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>
             Projections use real historical return data with random volatility each year. 
-            The yellow line shows portfolio value with crash and correction effects for visualization.
             Results may vary in each new calculation.
           </p>
         </div>

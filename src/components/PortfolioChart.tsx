@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -85,13 +84,6 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
             />
             <Line
               type="monotone"
-              dataKey="volatileValue"
-              stroke="#F59E0B"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              type="monotone"
               dataKey="value"
               stroke="#10B981"
               strokeWidth={3}
@@ -117,10 +109,6 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
             <span>Pesimistinis scenarijus</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-4 h-0.5 bg-yellow-500"></div>
-            <span>Volatyvumas</span>
-          </div>
-          <div className="flex items-center space-x-2">
             <div className="w-4 h-1 bg-green-500"></div>
             <span>Portfelio vertė (projekcija)</span>
           </div>
@@ -133,7 +121,6 @@ export const PortfolioChart: React.FC<PortfolioChartProps> = ({
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>
             Projekcijos naudoja tikrus istorinės grąžos duomenis su atsitiktiniu volatilumu kiekvienais metais. 
-            Geltona linija rodo portfolio vertę su crash ir correction poveikiu vizualizacijai.
             Rezultatai gali skirtis kiekviename naujame skaičiavime.
           </p>
         </div>

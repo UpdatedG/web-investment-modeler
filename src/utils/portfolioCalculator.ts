@@ -21,16 +21,21 @@ export interface YearlyCalculation {
   isCorrectionYear?: boolean;
   recoveryTimeRemaining?: number;
   correctionRecoveryTimeRemaining?: number;
+  volatileValue?: number;
+  isLowestPoint?: boolean;
+  drawdownFromPeak?: number;
+  isMarginCall?: boolean;
+  netImpact?: number;
 }
 
 export function calculatePortfolio(inputs: InvestmentInputs, language: string = 'lt'): PortfolioAllocation {
-  const { riskTolerance, sectorPreference, geographyPreference } = inputs;
+  const { riskTolerance, sectorPreference, geographyPreference, managementPreference } = inputs;
   
   // Baziniai instrumentų aprašymai
   const baseInstruments = {
     etf: {
-      name: getETFName(sectorPreference, geographyPreference, language),
-      description: getETFDescription(sectorPreference, geographyPreference, language),
+      name: getETFName(sectorPreference, geographyPreference, language, managementPreference),
+      description: getETFDescription(sectorPreference, geographyPreference, language, managementPreference),
       returnRange: getETFReturnRange(sectorPreference, geographyPreference)
     },
     growthStock: {
@@ -46,7 +51,7 @@ export function calculatePortfolio(inputs: InvestmentInputs, language: string = 
     crypto: {
       name: language === 'en' ? 'Cryptocurrencies' : 'Kriptovaliutos',
       description: language === 'en' ? 'Direct cryptocurrency investments (Bitcoin, Ethereum, Solana)' : 'Tiesioginės kriptovaliutų investicijos (Bitcoin, Ethereum, Solana)',
-      returnRange: [-20, 60] // Extreme volatility
+      returnRange: [10, 50] // High volatility around 30% average - BTC/ETH/SOL mix
     },
     gold: {
       name: language === 'en' ? 'Gold' : 'Auksas',
@@ -55,18 +60,18 @@ export function calculatePortfolio(inputs: InvestmentInputs, language: string = 
     },
     options: {
       name: language === 'en' ? 'Options' : 'Opcionai',
-      description: language === 'en' ? 'Stock options for high potential gains (SPY, QQQ options)' : 'Akcijų opcionai didelio potencialo pelno gavimui (SPY, QQQ opcionai)',
-      returnRange: [-30, 80] // Very high volatility
+      description: language === 'en' ? 'LEAPS options for leveraged stock exposure (SPY, QQQ options)' : 'LEAPS opcionai leveraged akcijų ekspozicijai (SPY, QQQ opcionai)',
+      returnRange: [15, 75] // 3x leveraged stock returns (3x of ~5-25% stock range)
     },
     leveraged: {
       name: language === 'en' ? 'Leveraged products' : 'Leveraged produktai',
       description: language === 'en' ? 'Leveraged investment products (e.g. TQQQ, UPRO)' : 'Finanisniais svertais pagrįsti investavimo produktai (pvz. TQQQ, UPRO)',
-      returnRange: [25, 35] // Leveraged ETFs (3x)
+      returnRange: [25, 35] // Leveraged ETFs (3x) - 32% YoY historical
     },
     moonshot: {
       name: language === 'en' ? 'Moonshot assets' : 'Moonshot aktyvai',
-      description: language === 'en' ? 'Highly speculative assets (penny stocks, meme coins, SPAC)' : 'Itin spekuliatyvūs aktyvai (penny stocks, meme coins, SPAC)',
-      returnRange: [-50, 100] // Extreme moonshot range
+      description: language === 'en' ? 'Highly speculative lottery-ticket assets (penny stocks, meme coins, SPAC)' : 'Itin spekuliatyvūs loterijos bilieto tipo aktyvai (penny stocks, meme coins, SPAC)',
+      returnRange: [-80, 500] // Lottery ticket model - frequent losses, rare massive gains
     }
   };
 
@@ -129,10 +134,50 @@ export function calculatePortfolio(inputs: InvestmentInputs, language: string = 
     }
   ];
 
-  return portfolioConfigs[riskTolerance];
+  const portfolio = portfolioConfigs[riskTolerance];
+  
+  // Add management warning for active management
+  if (managementPreference >= 1) {
+    const managementWarning = managementPreference === 1 
+      ? (language === 'en' 
+          ? 'You have selected medium-active management: Please note that unless you are a professional investor with vast experience, your actual results are expected to be noticeably worse.' 
+          : 'Jūs pasirinkote vidutiniškai aktyvų valdymą: Atkreipkite dėmesį, kad nebent esate profesionalus investuotojas su didžiule patirtimi, jūsų tikri rezultatai tikėtina bus prastesni.')
+      : (language === 'en' 
+          ? 'You have selected active management: Please note that unless you are a professional investor with vast experience, your actual results are expected to be very significantly worse.' 
+          : 'Jūs pasirinkote aktyvų valdymą: Atkreipkite dėmesį, kad nebent esate profesionalus investuotojas su didžiule patirtimi, jūsų tikri rezultatai tikėtina bus žymiai prastesni.');
+    
+    portfolio.warning = portfolio.warning 
+      ? `${managementWarning} ${portfolio.warning}`
+      : managementWarning;
+  }
+
+  return portfolio;
 }
 
-function getETFName(sector: string, geography: string, language: string = 'lt'): string {
+function getETFName(sector: string, geography: string, language: string = 'lt', managementPreference: number = 0): string {
+  // Trolling: Replace ETFs with individual stocks for active management
+  if (managementPreference >= 1) {
+    if (sector !== 'general') {
+      const sectorStocks: Record<string, string> = {
+        technology: language === 'en' ? 'Tech stocks (Apple, Microsoft, Google, Tesla)' : 'Technologijų akcijos (Apple, Microsoft, Google, Tesla)',
+        healthcare: language === 'en' ? 'Healthcare stocks (Johnson & Johnson, Pfizer, Moderna)' : 'Sveikatos sektorius akcijos (Johnson & Johnson, Pfizer, Moderna)',
+        energy: language === 'en' ? 'Energy stocks (ExxonMobil, Shell, BP)' : 'Energetikos akcijos (ExxonMobil, Shell, BP)',
+        automotive: language === 'en' ? 'Auto stocks (Tesla, Ford, BMW, Toyota)' : 'Automobilių akcijos (Tesla, Ford, BMW, Toyota)',
+        realestate: language === 'en' ? 'REIT stocks (American Tower, Prologis, Crown Castle)' : 'REIT akcijos (American Tower, Prologis, Crown Castle)'
+      };
+      return sectorStocks[sector] || (language === 'en' ? 'Individual stocks (S&P 500 picks)' : 'Individualios akcijos (S&P 500 atranka)');
+    }
+
+    const geoStocks: Record<string, string> = {
+      global: language === 'en' ? 'Global stocks (Apple, Microsoft, ASML, Samsung)' : 'Globalios akcijos (Apple, Microsoft, ASML, Samsung)',
+      europe: language === 'en' ? 'European stocks (ASML, SAP, Nestlé, LVMH)' : 'Europos akcijos (ASML, SAP, Nestlé, LVMH)',
+      emerging: language === 'en' ? 'Emerging market stocks (Taiwan Semi, Tencent, Alibaba)' : 'Besivystančių rinkų akcijos (Taiwan Semi, Tencent, Alibaba)'
+    };
+
+    return geoStocks[geography] || (language === 'en' ? 'Individual stocks (S&P 500 picks)' : 'Individualios akcijos (S&P 500 atranka)');
+  }
+
+  // Original ETF logic for passive management
   if (sector !== 'general') {
     const sectorNames: Record<string, string> = {
       technology: language === 'en' ? 'Technology ETF (e.g. EQQQ, IITU)' : 'Technologijų ETF (pvz. EQQQ, IITU)',
@@ -153,7 +198,30 @@ function getETFName(sector: string, geography: string, language: string = 'lt'):
   return geoNames[geography] || (language === 'en' ? 'VWCE ETF' : 'VWCE ETF');
 }
 
-function getETFDescription(sector: string, geography: string, language: string = 'lt'): string {
+function getETFDescription(sector: string, geography: string, language: string = 'lt', managementPreference: number = 0): string {
+  // Trolling: Change descriptions for active management
+  if (managementPreference >= 1) {
+    if (sector !== 'general') {
+      const sectorStockDescriptions: Record<string, string> = {
+        technology: language === 'en' ? 'Hand-picked technology stocks for active portfolio management' : 'Rankiniu būdu atrinktos technologijų akcijos aktyviam portfolio valdymui',
+        healthcare: language === 'en' ? 'Selected healthcare and biotech stocks for targeted exposure' : 'Atrinktos sveikatos sektorius ir biotechnologijų akcijos tikslinei ekspozicijai',
+        energy: language === 'en' ? 'Individual energy company stocks for sector concentration' : 'Individualios energetikos įmonių akcijos sektorinei koncentracijai',
+        automotive: language === 'en' ? 'Carefully selected automotive stocks for industry focus' : 'Kruopščiai atrinktos automobilių akcijos pramonės šakos fokusui',
+        realestate: language === 'en' ? 'Individual REIT stocks for real estate exposure' : 'Individualios REIT akcijos nekilnojamojo turto ekspozicijai'
+      };
+      return sectorStockDescriptions[sector] || (language === 'en' ? 'Actively managed individual stock selection' : 'Aktyviai valdomos individualios akcijos');
+    }
+
+    const geoStockDescriptions: Record<string, string> = {
+      global: language === 'en' ? 'Hand-picked global market leaders for active management' : 'Rankiniu būdu atrinkti globalūs rinkos lyderiai aktyviam valdymui',
+      europe: language === 'en' ? 'Selected European blue-chip stocks for regional focus' : 'Atrinktos Europos mėlynųjų lustų akcijos regioniniam fokusui',
+      emerging: language === 'en' ? 'Targeted emerging market stocks for growth potential' : 'Tikslinės besivystančių rinkų akcijos augimo potencialui'
+    };
+
+    return geoStockDescriptions[geography] || (language === 'en' ? 'Actively managed individual stock selection' : 'Aktyviai valdomos individualios akcijos');
+  }
+
+  // Original ETF descriptions for passive management
   if (sector !== 'general') {
     const sectorDescriptions: Record<string, string> = {
       technology: language === 'en' ? 'Technology sector ETF (18.3% - 18.8% average annual return)' : 'Technologijų sektorius ETF (18.3% - 18.8% vidutinis metinis grąža)',
@@ -304,44 +372,119 @@ function calculateCorrectionLoss(instrumentName: string): number {
 }
 
 // Generate random return within asset's range with additional volatility
-export function generateRandomReturn(baseRange: [number, number], volatilityFactor: number = 1): number {
+export function generateRandomReturn(baseRange: [number, number], volatilityFactor: number = 1, assetName?: string): number {
   const [min, max] = baseRange;
+  
+  // Special handling for moonshot assets - lottery ticket model
+  if (assetName && (assetName.includes('Moonshot') || assetName.includes('moonshot'))) {
+    // 85% chance of loss (-80% to -10%), 15% chance of big gain (50% to 500%)
+    if (Math.random() < 0.85) {
+      return -80 + Math.random() * 70; // -80% to -10%
+    } else {
+      return 50 + Math.random() * 450; // 50% to 500%
+    }
+  }
+  
   const baseReturn = min + Math.random() * (max - min);
   
-  // Add volatility (±20% of the base return by default)
-  const volatility = baseReturn * 0.2 * volatilityFactor;
+  // Reduce volatility multiplier to prevent excessive swings
+  const volatility = baseReturn * 0.15 * volatilityFactor; // Reverted back to 0.15
   const finalReturn = baseReturn + (Math.random() - 0.5) * 2 * volatility;
   
-  return Math.max(-90, finalReturn); // Cap losses at -90%
+  return Math.max(-95, finalReturn); // Cap losses at -95% (margin call territory)
+}
+
+// Generate random inflation rate based on historical data
+function generateInflationRate(): number {
+  // Use more conservative inflation: mostly around 2% with occasional spikes
+  // 80% chance of 1.5-2.5%, 20% chance of 2.5-4%
+  if (Math.random() < 0.8) {
+    return 1.5 + Math.random() * 1.0; // 1.5% to 2.5%
+  } else {
+    return 2.5 + Math.random() * 1.5; // 2.5% to 4% (higher years)
+  }
 }
 
 // Calculate detailed projections with yearly breakdown including crash and correction scenarios
 export function calculateDetailedProjections(inputs: InvestmentInputs, period: number, language: string = 'lt'): { 
-  projectionData: Array<{ year: number; value: number; invested: number; bestCase: number; worstCase: number; volatileValue: number; }>;
+  projectionData: Array<{ 
+    year: number; 
+    value: number; 
+    invested: number; 
+    bestCase: number; 
+    worstCase: number; 
+    volatileValue: number;
+    contributions: number;
+    growth: number;
+    inflationAdjustedValue: number;
+    annualInflation: number;
+  }>;
   yearlyCalculations: YearlyCalculation[];
+  drawdownStats: {
+    lowestValue: number;
+    lowestValueYear: number;
+    maxDrawdownPercent: number;
+    maxDrawdownYear: number;
+    peakValue: number;
+    peakValueYear: number;
+    isMarginCalled: boolean;
+    marginCallYear?: number;
+  };
+  performanceMetrics: {
+    cagr: number;
+    sharpeRatio: number;
+    totalContributions: number;
+    totalGrowth: number;
+    inflationImpact: number;
+  };
 } {
   const portfolio = calculatePortfolio(inputs, language);
   const yearlyCalculations: YearlyCalculation[] = [];
   const projectionData = [];
   
   let currentValue = inputs.initialSum;
-  let volatileValue = inputs.initialSum; // Track volatile value for graph
+  let peakValue = inputs.initialSum;
+  let peakValueYear = 0;
+  let lowestValue = inputs.initialSum;
+  let lowestValueYear = 0;
+  let maxDrawdownPercent = 0;
+  let maxDrawdownYear = 0;
+  let isMarginCalled = false;
+  let marginCallYear: number | undefined;
+  
+  // Track inflation and real values
+  let cumulativeInflation = 1;
+  let totalContributions = inputs.initialSum;
+  let annualReturns: number[] = [];
+  
+  // Track crash impacts and recovery
+  let pendingCrashImpact = 0; // Amount to be recovered over time
+  let pendingCorrectionImpact = 0; // Amount to be recovered over time
+  
   let recoveryState: { 
     isRecovering: boolean; 
     targetValue: number; 
     recoveryTimeRemaining: number; 
     totalRecoveryTime: number;
-  } = { isRecovering: false, targetValue: 0, recoveryTimeRemaining: 0, totalRecoveryTime: 0 };
+    yearlyRecoveryAmount: number;
+  } = { isRecovering: false, targetValue: 0, recoveryTimeRemaining: 0, totalRecoveryTime: 0, yearlyRecoveryAmount: 0 };
   
   let correctionState: {
     isInCorrection: boolean;
     correctionTimeRemaining: number;
     totalCorrectionTime: number;
-  } = { isInCorrection: false, correctionTimeRemaining: 0, totalCorrectionTime: 0 };
+    yearlyRecoveryAmount: number;
+  } = { isInCorrection: false, correctionTimeRemaining: 0, totalCorrectionTime: 0, yearlyRecoveryAmount: 0 };
   
   for (let year = 0; year <= period; year++) {
     const totalInvested = inputs.initialSum + inputs.monthlyContribution * 12 * year;
     const annualContribution = inputs.monthlyContribution * 12;
+    const annualInflation = year === 0 ? 0 : generateInflationRate();
+    
+    if (year > 0) {
+      cumulativeInflation *= (1 + annualInflation / 100);
+      totalContributions += annualContribution;
+    }
     
     if (year === 0) {
       // Initial year
@@ -354,7 +497,11 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
           value: currentValue * (instrument.percentage / 100)
         })),
         totalValue: currentValue,
-        totalInvested: totalInvested
+        totalInvested: totalInvested,
+        volatileValue: currentValue,
+        drawdownFromPeak: 0,
+        isLowestPoint: false,
+        isMarginCall: false
       };
       yearlyCalculations.push(initialCalc);
     } else {
@@ -373,24 +520,31 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         isRecoveryYear: recoveryState.isRecovering,
         isCorrectionYear,
         recoveryTimeRemaining: recoveryState.recoveryTimeRemaining,
-        correctionRecoveryTimeRemaining: correctionState.correctionTimeRemaining
+        correctionRecoveryTimeRemaining: correctionState.correctionTimeRemaining,
+        volatileValue: 0,
+        drawdownFromPeak: 0,
+        isLowestPoint: false,
+        isMarginCall: false
       };
       
       let newTotalValue = 0;
-      let newVolatileValue = 0;
+      let crashImpact = 0;
+      let correctionImpact = 0;
+      let recoveryImpact = 0;
       
-      // Calculate normal returns for actual portfolio value
+      // Calculate normal returns and apply crash/correction impacts
       portfolio.instruments.forEach(instrument => {
         const allocation = currentValue * (instrument.percentage / 100);
-        const volatileAllocation = volatileValue * (instrument.percentage / 100);
         const returnRange = (instrument as any).returnRange || [5, 10];
-        const normalReturn = generateRandomReturn(returnRange);
-        const instrumentValue = allocation * (1 + normalReturn / 100) + (annualContribution * (instrument.percentage / 100));
+        const normalReturn = generateRandomReturn(returnRange, 1, instrument.name);
         
-        // Calculate volatile value with drawdowns
-        let volatileInstrumentValue = volatileAllocation * (1 + normalReturn / 100) + (annualContribution * (instrument.percentage / 100));
+        // Apply normal growth to existing allocation
+        const grownAllocation = allocation * (1 + normalReturn / 100);
+        // Add contributions with partial year growth
+        const contributionWithGrowth = (annualContribution * (instrument.percentage / 100)) * (1 + (normalReturn / 100) * 0.5);
+        let instrumentValue = grownAllocation + contributionWithGrowth;
         
-        // For logging purposes, calculate drawdowns but don't apply them to actual value
+        // Calculate crash/correction impacts
         let crashDrawdown: number | undefined;
         let correctionDrawdown: number | undefined;
         let isRecovering = false;
@@ -401,68 +555,71 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         if (isCrashYear) {
           const rawCrashDrawdown = calculateCrashLoss(instrument.name);
           
-          // For gold, leave drawdown blank and add to ROI
-          if (instrument.name.includes('Auksas')) {
-            // Add the negative drawdown (positive gain) to the return
+          if (instrument.name.includes('Auksas') || instrument.name.includes('Gold')) {
+            // Gold gains during crashes - add to returns instead of showing drawdown
             const goldBoost = Math.abs(rawCrashDrawdown);
-            volatileInstrumentValue = volatileAllocation * (1 + (normalReturn + goldBoost) / 100) + (annualContribution * (instrument.percentage / 100));
-            crashDrawdown = undefined; // Leave blank for gold
+            instrumentValue = (allocation * (1 + (normalReturn + goldBoost) / 100)) + contributionWithGrowth;
+            crashDrawdown = undefined;
           } else {
             crashDrawdown = Math.abs(rawCrashDrawdown);
-            // Apply crash drawdown to volatile value
-            volatileInstrumentValue = volatileAllocation * (1 - crashDrawdown / 100) + (annualContribution * (instrument.percentage / 100));
+            // Calculate crash impact on existing allocation only (not contributions)
+            const crashImpactOnAllocation = grownAllocation * (crashDrawdown / 100);
+            crashImpact += crashImpactOnAllocation;
+            instrumentValue = grownAllocation - crashImpactOnAllocation + contributionWithGrowth;
           }
           
-          recoveryState.targetValue = currentValue + annualContribution;
+          // Set up recovery
           recoveryState.totalRecoveryTime = 1 + Math.random() * 0.7; // 1-1.7 years
           recoveryState.recoveryTimeRemaining = recoveryState.totalRecoveryTime;
+          recoveryState.yearlyRecoveryAmount = crashImpact / recoveryState.totalRecoveryTime;
           recoveryState.isRecovering = true;
           
+          isRecovering = true;
+          recoveryProgress = Math.min(1, 1 / recoveryState.totalRecoveryTime);
+          
           if (recoveryState.totalRecoveryTime <= 1) {
-            // Recovery completes within this year
-            isRecovering = true;
-            recoveryProgress = 1;
             recoveryState.isRecovering = false;
           } else {
-            // Recovery continues beyond this year
-            isRecovering = true;
-            recoveryProgress = 1 / recoveryState.totalRecoveryTime;
             recoveryState.recoveryTimeRemaining -= 1;
           }
         } else if (recoveryState.isRecovering) {
-          // Continuing recovery from previous crash
+          // Apply recovery
+          const recoveryAmount = (allocation / currentValue) * recoveryState.yearlyRecoveryAmount;
+          instrumentValue += recoveryAmount;
+          recoveryImpact += recoveryAmount;
+          
+          isRecovering = true;
+          recoveryProgress = (recoveryState.totalRecoveryTime - recoveryState.recoveryTimeRemaining) / recoveryState.totalRecoveryTime;
+          
           if (recoveryState.recoveryTimeRemaining <= 1) {
-            // Recovery completes this year
-            isRecovering = true;
-            recoveryProgress = 1;
             recoveryState.isRecovering = false;
           } else {
-            // Still recovering
-            isRecovering = true;
-            recoveryProgress = (recoveryState.totalRecoveryTime - recoveryState.recoveryTimeRemaining + 1) / recoveryState.totalRecoveryTime;
             recoveryState.recoveryTimeRemaining -= 1;
           }
         } else if (isCorrectionYear) {
           const rawCorrectionDrawdown = calculateCorrectionLoss(instrument.name);
           
-          // For gold, leave drawdown blank and add to ROI
-          if (instrument.name.includes('Auksas')) {
-            // Add the negative drawdown (positive gain) to the return
+          if (instrument.name.includes('Auksas') || instrument.name.includes('Gold')) {
+            // Gold gains during corrections
             const goldBoost = Math.abs(rawCorrectionDrawdown);
-            volatileInstrumentValue = volatileAllocation * (1 + (normalReturn + goldBoost) / 100) + (annualContribution * (instrument.percentage / 100));
-            correctionDrawdown = undefined; // Leave blank for gold
+            instrumentValue = (allocation * (1 + (normalReturn + goldBoost) / 100)) + contributionWithGrowth;
+            correctionDrawdown = undefined;
           } else {
             correctionDrawdown = Math.abs(rawCorrectionDrawdown);
-            // Apply correction drawdown to volatile value
-            volatileInstrumentValue = volatileAllocation * (1 - correctionDrawdown / 100) + (annualContribution * (instrument.percentage / 100));
+            // Calculate correction impact on existing allocation only
+            const correctionImpactOnAllocation = grownAllocation * (correctionDrawdown / 100);
+            correctionImpact += correctionImpactOnAllocation;
+            instrumentValue = grownAllocation - correctionImpactOnAllocation + contributionWithGrowth;
           }
           
+          // Set up correction recovery
           correctionState.totalCorrectionTime = 0.5 + Math.random() * 0.33; // 6-10 months
           correctionState.correctionTimeRemaining = correctionState.totalCorrectionTime;
+          correctionState.yearlyRecoveryAmount = correctionImpact / correctionState.totalCorrectionTime;
           correctionState.isInCorrection = true;
           
           isCorrection = true;
-          correctionRecoveryProgress = 1; // Assume full recovery within 6-10 months
+          correctionRecoveryProgress = Math.min(1, 1 / correctionState.totalCorrectionTime);
           
           if (correctionState.totalCorrectionTime <= 1) {
             correctionState.isInCorrection = false;
@@ -470,7 +627,11 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
             correctionState.correctionTimeRemaining -= 1;
           }
         } else if (correctionState.isInCorrection) {
-          // Continuing correction recovery
+          // Apply correction recovery
+          const recoveryAmount = (allocation / currentValue) * correctionState.yearlyRecoveryAmount;
+          instrumentValue += recoveryAmount;
+          recoveryImpact += recoveryAmount;
+          
           if (correctionState.correctionTimeRemaining <= 1) {
             correctionState.isInCorrection = false;
           } else {
@@ -492,12 +653,60 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
         });
         
         newTotalValue += instrumentValue;
-        newVolatileValue += volatileInstrumentValue;
       });
       
+      // Calculate net impact for display
+      let netImpact = 0;
+      if (crashImpact > 0) {
+        netImpact = -crashImpact; // Negative impact
+      } else if (correctionImpact > 0) {
+        netImpact = -correctionImpact; // Negative impact
+      } else if (recoveryImpact > 0) {
+        netImpact = recoveryImpact; // Positive impact
+      }
+      
       yearCalculation.totalValue = newTotalValue;
+      yearCalculation.volatileValue = newTotalValue; // Same as total value now
+      yearCalculation.netImpact = Math.round(netImpact);
+      
+      // Track overall peak for statistics and drawdown calculation
+      if (newTotalValue > peakValue) {
+        peakValue = newTotalValue;
+        peakValueYear = year;
+      }
+      
+      if (newTotalValue < lowestValue) {
+        lowestValue = newTotalValue;
+        lowestValueYear = year;
+        yearCalculation.isLowestPoint = true;
+      }
+      
+      // Calculate drawdown percentage from all-time high
+      const currentDrawdown = peakValue > 0 ? ((peakValue - newTotalValue) / peakValue) * 100 : 0;
+      yearCalculation.drawdownFromPeak = Math.max(0, currentDrawdown);
+      
+      if (currentDrawdown > maxDrawdownPercent) {
+        maxDrawdownPercent = currentDrawdown;
+        maxDrawdownYear = year;
+      }
+      
+      // Check for margin call (portfolio value <= 0)
+      if (newTotalValue <= 0 && !isMarginCalled) {
+        isMarginCalled = true;
+        marginCallYear = year;
+        yearCalculation.isMarginCall = true;
+        newTotalValue = 0; // Set to zero after margin call
+      }
+      
       currentValue = newTotalValue;
-      volatileValue = newVolatileValue;
+      
+      // Track annual return for Sharpe ratio calculation
+      if (year > 0) {
+        const previousValue = projectionData[year - 1].value;
+        const annualReturn = previousValue > 0 ? ((currentValue - previousValue) / previousValue) * 100 : 0;
+        annualReturns.push(annualReturn);
+      }
+      
       yearlyCalculations.push(yearCalculation);
     }
     
@@ -507,9 +716,53 @@ export function calculateDetailedProjections(inputs: InvestmentInputs, period: n
       invested: totalInvested,
       bestCase: Math.round(currentValue * 1.3),
       worstCase: Math.round(currentValue * 0.7),
-      volatileValue: Math.round(volatileValue)
+      volatileValue: Math.round(currentValue),
+      contributions: Math.round(year === 0 ? inputs.initialSum : annualContribution),
+      growth: Math.round(currentValue - totalContributions),
+      inflationAdjustedValue: Math.round(currentValue / cumulativeInflation),
+      annualInflation: Math.round(annualInflation * 100) / 100
     });
   }
   
-  return { projectionData, yearlyCalculations };
+  const drawdownStats = {
+    lowestValue: Math.round(lowestValue),
+    lowestValueYear,
+    maxDrawdownPercent: Math.round(maxDrawdownPercent * 100) / 100,
+    maxDrawdownYear,
+    peakValue: Math.round(peakValue),
+    peakValueYear,
+    isMarginCalled,
+    marginCallYear
+  };
+  
+  const performanceMetrics = {
+    cagr: calculateCAGR(totalContributions, currentValue, period),
+    sharpeRatio: calculateSharpeRatio(annualReturns),
+    totalContributions: Math.round(totalContributions),
+    totalGrowth: Math.round(currentValue - totalContributions),
+    inflationImpact: Math.round(currentValue - (currentValue / cumulativeInflation))
+  };
+  
+  return { projectionData, yearlyCalculations, drawdownStats, performanceMetrics };
+}
+
+function calculateCAGR(initialValue: number, finalValue: number, years: number): number {
+  if (years <= 0 || initialValue <= 0) return 0;
+  return (Math.pow(finalValue / initialValue, 1 / years) - 1) * 100;
+}
+
+function calculateSharpeRatio(returns: number[]): number {
+  if (returns.length === 0) return 0;
+  
+  const riskFreeRate = 2.0; // Assume 2% risk-free rate
+  const avgReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+  const excessReturns = returns.map(r => r - riskFreeRate);
+  const avgExcessReturn = excessReturns.reduce((sum, r) => sum + r, 0) / excessReturns.length;
+  
+  if (excessReturns.length < 2) return 0;
+  
+  const variance = excessReturns.reduce((sum, r) => sum + Math.pow(r - avgExcessReturn, 2), 0) / (excessReturns.length - 1);
+  const stdDev = Math.sqrt(variance);
+  
+  return stdDev === 0 ? 0 : avgExcessReturn / stdDev;
 }

@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { TrendingUp, Calculator, Globe } from 'lucide-react';
+import { TrendingUp, Calculator, Globe, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface HeaderEnProps {
@@ -8,6 +7,10 @@ interface HeaderEnProps {
 }
 
 export const HeaderEn: React.FC<HeaderEnProps> = ({ onLanguageChange }) => {
+  const handleFeedback = () => {
+    window.open('https://www.reddit.com/message/compose/?to=violt&subject=r/6nuliai%20calculator', '_blank');
+  };
+
   return (
     <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4 py-6">
@@ -24,6 +27,13 @@ export const HeaderEn: React.FC<HeaderEnProps> = ({ onLanguageChange }) => {
           
           <div className="flex items-center space-x-4">
             <Button 
+              onClick={handleFeedback}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+            >
+              <MessageSquare className="h-4 w-4" />
+              <span>Leave feedback</span>
+            </Button>
+            <Button 
               variant="outline" 
               onClick={onLanguageChange}
               className="flex items-center space-x-2"
@@ -33,7 +43,7 @@ export const HeaderEn: React.FC<HeaderEnProps> = ({ onLanguageChange }) => {
             </Button>
             <div className="flex items-center space-x-2 text-green-600">
               <TrendingUp className="h-5 w-5" />
-              <span className="text-sm font-medium">v0.2b</span>
+              <span className="text-sm font-medium">v0.3b</span>
             </div>
           </div>
         </div>

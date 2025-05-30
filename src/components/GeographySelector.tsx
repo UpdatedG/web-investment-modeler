@@ -11,7 +11,7 @@ export const GeographySelector: React.FC<GeographySelectorProps> = ({ value, onC
   const geographies = [
     { 
       id: 'global', 
-      label: 'Globalūs rinkai', 
+      label: 'Globali rinka', 
       description: 'Pasaulio rinkos',
       icon: Globe, 
       color: 'text-blue-600', 
@@ -19,7 +19,7 @@ export const GeographySelector: React.FC<GeographySelectorProps> = ({ value, onC
     },
     { 
       id: 'europe', 
-      label: 'Europos rinkai', 
+      label: 'Europos rinka', 
       description: 'ES šalių rinkos',
       icon: MapPin, 
       color: 'text-green-600', 

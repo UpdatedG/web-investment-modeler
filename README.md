@@ -1,4 +1,3 @@
-
 # r/6nuliai Investment Calculator
 
 A web-based investment scenario generator that helps users plan their investment strategies by calculating projected portfolio growth based on various risk models and financial instruments. This calculator uses real historical market data to provide realistic projections for different investment scenarios.
@@ -12,6 +11,10 @@ This investment calculator provides:
 - **Risk Assessment**: Offers different risk models from conservative to aggressive strategies
 - **Scenario Analysis**: Shows optimistic, pessimistic, and volatile market scenarios
 - **Interactive Visualization**: Charts and graphs to visualize portfolio breakdown and growth projections
+- **Performance Metrics**: CAGR calculation, Sharpe ratio analysis, and risk-adjusted returns
+- **Contribution Analysis**: Breakdown of contributions vs. investment growth vs. inflation impact
+- **Risk Statistics**: Comprehensive drawdown tracking, volatility analysis, and margin call detection
+- **Educational Features**: Active management warnings with academic research backing
 - **Bilingual Support**: Available in Lithuanian and English
 
 ### Key Features
@@ -22,8 +25,15 @@ This investment calculator provides:
 - Time horizon planning (5-30 years)
 - Risk tolerance assessment
 - Geographic and sector preference settings
+- **Management preference selection** with educational warnings
 - Real-time calculation debugging table
 - Historical volatility modeling
+- **Contribution vs. Growth breakdown charts** with inflation tracking
+- **Sharpe ratio performance metrics** with risk-adjusted returns
+- **Contribution scenario analysis** (stopping vs. doubling contributions)
+- **Comprehensive risk statistics** including drawdown tracking and margin call detection
+- **Active management education** with research-backed warnings about underperformance
+- **"The Brutal Truth" modal** showing academic research on active vs. passive investing
 
 ## How Calculations Are Made
 
@@ -53,13 +63,28 @@ Calculations are based on:
 
 The calculator is designed for educational and planning purposes, mostly visualisation. Always consult with qualified financial advisors for personalized investment advice.
 
+### Active Management Education
+
+The calculator includes an educational feature that demonstrates the challenges of active investment management:
+
+- **Smart Portfolio Adaptation**: When users select "medium-active" or "active" management preferences, ETF allocations are automatically replaced with individual stock picks (e.g., "Technology ETF" becomes "Tech stocks (Apple, Microsoft, Google, Tesla)")
+- **Research-Based Warnings**: Users receive warnings about expected underperformance based on academic research
+- **"The Brutal Truth" Modal**: Clicking "Why?" opens a comprehensive modal with academic research showing:
+  - 98%+ of active stock pickers underperform the market over 20 years
+  - 88.99% of large-cap US funds underperformed the S&P 500 over 10 years  
+  - 90% of retail investors lose money or underperform the broader market
+  - Detailed findings from Barber & Odean (Berkeley) and DALBAR research studies
+- **Educational Purpose**: This feature helps users understand why passive index investing typically outperforms active stock picking for most investors
+
+**Note**: The underlying calculations remain mathematically identical regardless of management preference - only the display names and educational warnings change.
+
 ### WARNING
 - **This is mostly vibecoded stuff dont hate me for it**
 
 ### Known issues
 - **Low accuracy for highest-risk assets**
-- **Region specific and sector specific ETF's has not been troughly tested**
-
+- **Sector and geography preferences DO impact calculations** with different return ranges (Technology: 18.3-18.8%, Energy: 2.1-4.8%, etc.)
+- **Management preference is purely educational** - it only changes display names and warnings, not actual calculations
 
 ## Technology Stack
 
