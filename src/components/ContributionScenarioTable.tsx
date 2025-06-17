@@ -23,18 +23,20 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
 
   // Calculate scenarios using proper portfolio calculations
   const calculateScenario = (stopYear: number | null, multiplier: number = 1) => {
+    // Skip scenarios where stopYear >= period (doesn't make sense)
+    if (stopYear && stopYear >= period) {
+      return null;
+    }
+    
+    // Get the baseline projection data that's already calculated
+    const { projectionData: baselineProjection } = calculateDetailedProjections(inputs, period, isEnglish ? 'en' : 'lt');
+    
     let finalValue: number;
     let totalContributions: number;
     let growth: number;
     
     if (stopYear) {
-      // Skip scenarios where stopYear >= period (doesn't make sense)
-      if (stopYear >= period) {
-        return null;
-      }
-      
-      // For stop scenarios, calculate manually using baseline projection
-      const { projectionData: baselineProjection } = calculateDetailedProjections(inputs, period, isEnglish ? 'en' : 'lt');
+      // For stop scenarios: Use baseline market performance but stop contributions
       const stopYearData = baselineProjection[stopYear];
       
       // Safety check
@@ -42,31 +44,50 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
         return null;
       }
       
+      // Calculate what the portfolio would be worth at stop year with baseline performance
       const stopYearValue = stopYearData.value;
       const stopYearContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * stopYear);
       
-      // Calculate average annual return from the baseline projection
-      const finalProjectionValue = baselineProjection[baselineProjection.length - 1].value;
-      const totalProjectionContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * period);
-      const averageAnnualReturn = Math.pow(finalProjectionValue / totalProjectionContributions, 1 / period) - 1;
-      
-      // Apply growth for remaining years without contributions
+      // Extract the growth rate from baseline performance for remaining years
       const remainingYears = period - stopYear;
-      finalValue = stopYearValue * Math.pow(1 + averageAnnualReturn, remainingYears);
+      if (remainingYears > 0) {
+        // Calculate average annual portfolio growth rate from baseline
+        const finalBaselineValue = baselineProjection[baselineProjection.length - 1].value;
+        const totalBaselineContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * period);
+        const portfolioGrowthRate = Math.pow(finalBaselineValue / totalBaselineContributions, 1 / period) - 1;
+        
+        // Apply this growth rate to the stopped portfolio (no new contributions)
+        finalValue = stopYearValue * Math.pow(1 + portfolioGrowthRate, remainingYears);
+      } else {
+        finalValue = stopYearValue;
+      }
+      
       totalContributions = stopYearContributions;
       growth = finalValue - totalContributions;
     } else {
-      // For continue/double scenarios, use modified inputs
-      const modifiedInputs = { ...inputs };
-      if (multiplier !== 1) {
-        modifiedInputs.monthlyContribution = inputs.monthlyContribution * multiplier;
+      // For double contributions: Scale the baseline results proportionally
+      if (multiplier === 2) {
+        // Double contributions means roughly double the final value (simplified)
+        // Use baseline growth pattern but with doubled contribution impact
+        const baselineFinalValue = baselineProjection[baselineProjection.length - 1].value;
+        const baselineContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * period);
+        const baselineGrowth = baselineFinalValue - baselineContributions;
+        
+        // Double the contributions, keep the same growth rate on the larger base
+        totalContributions = inputs.initialSum + (inputs.monthlyContribution * 2 * 12 * period);
+        const additionalContributions = inputs.monthlyContribution * 12 * period;
+        
+        // Apply the same growth rate to the larger contribution base
+        const growthRate = baselineGrowth / baselineContributions;
+        finalValue = totalContributions * (1 + growthRate);
+        growth = finalValue - totalContributions;
+      } else {
+        // Baseline scenario - use existing data
+        const baselineData = baselineProjection[baselineProjection.length - 1];
+        finalValue = baselineData.value;
+        totalContributions = inputs.initialSum + (inputs.monthlyContribution * 12 * period);
+        growth = finalValue - totalContributions;
       }
-      
-      const { projectionData: modifiedProjection } = calculateDetailedProjections(modifiedInputs, period, isEnglish ? 'en' : 'lt');
-      const finalData = modifiedProjection[modifiedProjection.length - 1];
-      finalValue = finalData.value;
-      totalContributions = inputs.initialSum + (modifiedInputs.monthlyContribution * 12 * period);
-      growth = finalValue - totalContributions;
     }
     
     return {
@@ -251,9 +272,9 @@ export const ContributionScenarioTable: React.FC<ContributionScenarioTableProps>
               {isEnglish ? 'Assumptions:' : 'Prielaidos:'}
             </h4>
             <ul className="space-y-1 text-xs text-gray-600">
-              <li>• {isEnglish ? `Uses portfolio CAGR from main calculation` : `Naudoja portfelio CAGR iš pagrindinio skaičiavimo`}</li>
-              <li>• {isEnglish ? 'Real returns adjusted by 2% average inflation' : 'Realūs grąžos rodikliai koreguojami 2% vidutine infliacija'}</li>
-              <li>• {isEnglish ? 'Market volatility included in base calculations' : 'Rinkos volatilumas įtrauktas į bazinius skaičiavimus'}</li>
+              <li>• {isEnglish ? `Uses same market conditions as baseline projection` : `Naudoja tas pačias rinkos sąlygas kaip bazinė projekcija`}</li>
+              <li>• {isEnglish ? 'Stop scenarios apply baseline growth rate to stopped portfolio' : 'Sustabdymo scenarijai taiko bazinį augimo tempą sustabdytam portfeliui'}</li>
+              <li>• {isEnglish ? 'Double contributions scale proportionally with same growth patterns' : 'Dvigubos įmokos proporcingai didėja su tais pačiais augimo šablonais'}</li>
               <li>• {isEnglish ? 'No fees or taxes included' : 'Mokesčiai ir komisiniai neįtraukti'}</li>
             </ul>
           </div>
